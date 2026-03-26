@@ -1,0 +1,522 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect } from 'react';
+import { auth, db, googleProvider, signInWithPopup, signOut, onSnapshot, doc, setDoc, getDoc } from './firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { UserProfile } from './types';
+import Navbar from './components/Navbar';
+import BookMap from './components/BookMap';
+import BookListingForm from './components/BookListingForm';
+import ChatList from './components/ChatList';
+import ChatWindow from './components/ChatWindow';
+import UserProfileModal from './components/UserProfileModal';
+import ReviewModal from './components/ReviewModal';
+import NotificationSettingsModal from './components/NotificationSettingsModal';
+import { useNotifications } from './hooks/useNotifications';
+import { motion, AnimatePresence } from 'motion/react';
+import LandingHero from './components/LandingHero';
+import PaymentGateway from './components/PaymentGateway';
+import { Book, MessageCircle, Plus, Map as MapIcon, ShieldAlert, Info, X, Heart, BookOpen, MapPin, Star, ChevronRight } from 'lucide-react';
+
+export default function App() {
+  const [user, loading, error] = useAuthState(auth);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [activeTab, setActiveTab] = useState<'map' | 'list' | 'chats'>('map');
+  const [showListingForm, setShowListingForm] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'bkash' | 'nagad' | null>(null);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [pendingListing, setPendingListing] = useState(false);
+  const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [reviewTarget, setReviewTarget] = useState<{ userId: string; userName: string; bookId: string } | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+
+  useNotifications(userProfile);
+
+  useEffect(() => {
+    // If user is logged in, skip landing
+    if (user) {
+      setHasStarted(true);
+      if (pendingListing) {
+        setShowListingForm(true);
+        setPendingListing(false);
+      }
+    }
+  }, [user, pendingListing]);
+
+  useEffect(() => {
+    if (user) {
+      const docRef = doc(db, 'users', user.uid);
+      
+      const unsubscribe = onSnapshot(docRef, async (docSnap) => {
+        if (docSnap.exists()) {
+          setUserProfile(docSnap.data() as UserProfile);
+        } else {
+          const newProfile: UserProfile = {
+            uid: user.uid,
+            displayName: user.displayName || 'Anonymous',
+            email: user.email || '',
+            photoURL: user.photoURL || undefined,
+            givenCount: 0,
+            receivedCount: 0,
+            rating: 0,
+            ratingCount: 0,
+          };
+          await setDoc(docRef, newProfile);
+          setUserProfile(newProfile);
+        }
+      });
+      
+      return () => unsubscribe();
+    } else {
+      setUserProfile(null);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          // Default to a central location if needed
+          setUserLocation({ lat: 23.8103, lng: 90.4125 }); // Dhaka as default
+        }
+      );
+    }
+  }, []);
+
+  const handleLogin = async () => {
+    setLoginError(null);
+    try {
+      await signInWithPopup(auth, googleProvider);
+      setHasStarted(true);
+    } catch (error: any) {
+      if (error.code === 'auth/popup-closed-by-user') {
+        // User closed the popup, no need to show a scary error
+        console.log("Login popup closed by user");
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        console.log("Login request cancelled");
+      } else {
+        console.error("Login error:", error);
+        setLoginError(`Failed to sign in (${error.code || error.message}). If you're using a browser that blocks popups, please allow them for this site and try again.`);
+      }
+    }
+  };
+  const handleLogout = () => {
+    signOut(auth);
+    setHasStarted(false);
+  };
+
+  const handleListABook = async () => {
+    if (!user) {
+      setPendingListing(true);
+      await handleLogin();
+    } else {
+      setShowListingForm(true);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-stone-50">
+        <div className="text-stone-400 animate-pulse font-serif italic text-xl">Loading BookDrop...</div>
+      </div>
+    );
+  }
+
+  if (!hasStarted && !user) {
+    return (
+      <>
+        {loginError && (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-red-500 text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3 max-w-md w-full">
+            <div className="flex-1 text-sm">{loginError}</div>
+            <button onClick={() => setLoginError(null)} className="text-white hover:text-red-200">
+              &times;
+            </button>
+          </div>
+        )}
+        <LandingHero 
+          onGetStarted={() => setHasStarted(true)} 
+          onLogin={handleLogin} 
+          onListABook={handleListABook} 
+          onSupport={() => setShowSupportModal(true)}
+        />
+      </>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-stone-50 flex flex-col font-sans text-stone-900">
+      {loginError && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-red-500 text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3 max-w-md w-full">
+          <div className="flex-1 text-sm">{loginError}</div>
+          <button onClick={() => setLoginError(null)} className="text-white hover:text-red-200">
+            &times;
+          </button>
+        </div>
+      )}
+      <Navbar 
+        user={user || null} 
+        userProfile={userProfile}
+        onLogout={handleLogout} 
+        onLogin={handleLogin} 
+        onAddBook={() => setShowListingForm(true)}
+        onSupport={() => setShowSupportModal(true)}
+        onSettings={() => setShowNotificationSettings(true)}
+      />
+      
+      <main className="flex-1 relative overflow-hidden flex flex-col">
+        <div className="flex-1 relative">
+          <div className={`absolute inset-0 ${activeTab === 'map' ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none'} transition-opacity duration-300`}>
+            <BookMap 
+              userLocation={userLocation} 
+              onChatRequest={(chatId) => {
+                setSelectedChatId(chatId);
+                setActiveTab('chats');
+              }}
+              onLogin={handleLogin}
+              onUserClick={(userId) => setSelectedUserId(userId)}
+            />
+          </div>
+          
+          <AnimatePresence mode="wait">
+            {activeTab === 'chats' && user && (
+              <motion.div 
+                key="chats"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="absolute inset-0 flex z-20 bg-white"
+              >
+                <div className={`${selectedChatId ? 'hidden md:block' : 'block'} w-full md:w-80 border-r border-stone-200 bg-white`}>
+                  <ChatList 
+                    onSelectChat={setSelectedChatId} 
+                    selectedChatId={selectedChatId} 
+                    onSupport={() => setShowSupportModal(true)}
+                  />
+                </div>
+                <div className={`${selectedChatId ? 'block' : 'hidden md:block'} flex-1 bg-stone-50`}>
+                  {selectedChatId ? (
+                    <ChatWindow 
+                      chatId={selectedChatId} 
+                      onBack={() => setSelectedChatId(null)} 
+                      onReviewUser={(userId, userName, bookId) => setReviewTarget({ userId, userName, bookId })}
+                      onUserClick={(userId) => setSelectedUserId(userId)}
+                    />
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-stone-400 italic">
+                      Select a conversation to start chatting
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Mobile Navigation */}
+        <div className="bg-white border-t border-stone-200 p-2 flex justify-around items-center md:hidden">
+          <button 
+            onClick={() => setActiveTab('map')}
+            className={`p-3 rounded-2xl transition-colors ${activeTab === 'map' ? 'bg-stone-900 text-white' : 'text-stone-400'}`}
+          >
+            <MapIcon size={24} />
+          </button>
+          <button 
+            onClick={handleListABook}
+            className="p-3 bg-stone-900 text-white rounded-full shadow-lg -mt-8 border-4 border-stone-50"
+          >
+            <Plus size={24} />
+          </button>
+          <button 
+            onClick={() => {
+              if (!user) {
+                handleLogin();
+              } else {
+                setActiveTab('chats');
+              }
+            }}
+            className={`p-3 rounded-2xl transition-colors ${activeTab === 'chats' ? 'bg-stone-900 text-white' : 'text-stone-400'}`}
+          >
+            <MessageCircle size={24} />
+          </button>
+        </div>
+
+        {/* Desktop Floating Action Button */}
+        <button 
+          onClick={handleListABook}
+          className="hidden md:flex fixed bottom-8 right-8 bg-stone-900 text-white p-4 rounded-full shadow-xl hover:scale-110 transition-transform items-center gap-2 group z-[1500]"
+        >
+          <Plus size={24} />
+          <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 font-medium">List a Book</span>
+        </button>
+
+        {/* Desktop Tab Switcher */}
+        <div className="hidden md:flex fixed bottom-8 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-md border border-stone-200 p-1 rounded-full shadow-lg z-[1500]">
+          <button 
+            onClick={() => setActiveTab('map')}
+            className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === 'map' ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}
+          >
+            Map
+          </button>
+          <button 
+            onClick={() => {
+              if (!user) {
+                handleLogin();
+              } else {
+                setActiveTab('chats');
+              }
+            }}
+            className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === 'chats' ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}
+          >
+            Messages
+          </button>
+        </div>
+      </main>
+
+      <AnimatePresence>
+        {showListingForm && user && (
+          <BookListingForm 
+            onClose={() => setShowListingForm(false)} 
+            userLocation={userLocation}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedUserId && (
+          <UserProfileModal 
+            userId={selectedUserId} 
+            onClose={() => setSelectedUserId(null)} 
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {reviewTarget && (
+          <ReviewModal 
+            targetUserId={reviewTarget.userId}
+            targetUserName={reviewTarget.userName}
+            bookId={reviewTarget.bookId}
+            onClose={() => setReviewTarget(null)} 
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Payment Gateway Modal */}
+      <AnimatePresence>
+        {paymentMethod && (
+          <PaymentGateway 
+            method={paymentMethod}
+            onClose={() => setPaymentMethod(null)}
+            onSuccess={() => {
+              // Handle successful payment (e.g., show a toast or update user profile)
+              console.log('Payment successful!');
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Support Modal */}
+      <AnimatePresence>
+        {showSupportModal && (
+          <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-md z-[4000] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              className="bg-white w-full max-w-md rounded-[32px] shadow-2xl overflow-hidden relative"
+            >
+              <button 
+                onClick={() => setShowSupportModal(false)}
+                className="absolute top-6 right-6 p-2 text-stone-400 hover:text-stone-900 transition-colors z-10"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="p-8 sm:p-10 text-center space-y-6">
+                <div className="w-16 h-16 bg-rose-50 rounded-3xl flex items-center justify-center text-rose-500 mx-auto shadow-sm">
+                  <Heart size={32} className="fill-rose-500" />
+                </div>
+                
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-serif italic text-stone-900">Support BookDrop</h2>
+                  <p className="text-stone-500 text-sm leading-relaxed">
+                    We're a small team keeping this community free and ad-free. Your support helps cover server costs and keeps the neighborhood sharing.
+                  </p>
+                </div>
+
+                <div className="grid gap-3">
+                  {/* bKash Checkout Option */}
+                  <button 
+                    onClick={() => {
+                      setPaymentMethod('bkash');
+                      setShowSupportModal(false);
+                    }}
+                    className="group relative bg-[#D12053] p-4 rounded-2xl flex items-center justify-between shadow-lg shadow-pink-500/10 hover:scale-[1.02] transition-transform"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-[#D12053] text-xs">bKash</div>
+                      <div className="text-left">
+                        <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest">Local Support (BD)</p>
+                        <p className="text-sm font-bold text-white">bKash Checkout</p>
+                      </div>
+                    </div>
+                    <ChevronRight size={18} className="text-white/30 group-hover:text-white transition-colors" />
+                  </button>
+
+                  {/* Nagad Checkout Option */}
+                  <button 
+                    onClick={() => {
+                      setPaymentMethod('nagad');
+                      setShowSupportModal(false);
+                    }}
+                    className="group relative bg-[#F7941D] p-4 rounded-2xl flex items-center justify-between shadow-lg shadow-orange-500/10 hover:scale-[1.02] transition-transform"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-[#F7941D] text-xs">Nagad</div>
+                      <div className="text-left">
+                        <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest">Local Support (BD)</p>
+                        <p className="text-sm font-bold text-white">Nagad Checkout</p>
+                      </div>
+                    </div>
+                    <ChevronRight size={18} className="text-white/30 group-hover:text-white transition-colors" />
+                  </button>
+
+                  {/* Patreon Option */}
+                  <a 
+                    href="https://www.patreon.com/c/MahmudulHasan557" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-3 w-full py-4 bg-[#FF424D] text-white font-bold rounded-2xl hover:scale-[1.02] transition-transform shadow-lg shadow-red-500/10"
+                  >
+                    <div className="w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                      <div className="w-2.5 h-2.5 bg-[#FF424D] rounded-full" />
+                    </div>
+                    Support on Patreon
+                  </a>
+
+                  <button 
+                    onClick={() => setShowSupportModal(false)}
+                    className="w-full py-4 bg-stone-50 text-stone-400 font-bold rounded-2xl hover:bg-stone-100 transition-colors text-xs uppercase tracking-widest"
+                  >
+                    Maybe later
+                  </button>
+                </div>
+
+                <p className="text-[10px] text-stone-400 uppercase tracking-[0.2em] font-bold">
+                  Thank you for being part of us
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* How it Works Modal */}
+      <AnimatePresence>
+        {showHowItWorks && (
+          <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-[3000] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white w-full max-w-2xl rounded-[32px] sm:rounded-[40px] shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh] overflow-y-auto md:overflow-visible"
+            >
+              <div className="w-full md:w-1/2 bg-stone-900 p-8 sm:p-10 text-white flex flex-col justify-between">
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-stone-800 flex items-center justify-center">
+                    <BookOpen size={20} className="sm:w-6 sm:h-6" />
+                  </div>
+                  <h2 className="text-3xl sm:text-4xl font-serif italic leading-tight">Sharing made <br />simple.</h2>
+                  <p className="text-stone-400 text-xs sm:text-sm leading-relaxed">
+                    BookDrop is a community-driven platform where books find new lives. 
+                    We believe in the power of shared stories and neighborhood trust.
+                  </p>
+                </div>
+                <div className="pt-8 sm:pt-10 flex items-center gap-2 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-stone-500">
+                  <ShieldAlert size={12} className="sm:w-3.5 sm:h-3.5" />
+                  Strictly Non-Commercial
+                </div>
+              </div>
+              <div className="w-full md:w-1/2 p-8 sm:p-10 space-y-6 sm:space-y-8 relative">
+                <button 
+                  onClick={() => setShowHowItWorks(false)}
+                  className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 text-stone-300 hover:text-stone-900 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+                
+                <div className="space-y-5 sm:space-y-6">
+                  <div className="flex gap-3 sm:gap-4">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-900 font-serif italic shrink-0 text-sm sm:text-base">1</div>
+                    <div className="space-y-0.5 sm:space-y-1">
+                      <h4 className="font-medium text-xs sm:text-sm">List your books</h4>
+                      <p className="text-stone-500 text-[10px] sm:text-xs leading-relaxed">Snap a photo and set a location. Your book will appear on the neighborhood map.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 sm:gap-4">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-900 font-serif italic shrink-0 text-sm sm:text-base">2</div>
+                    <div className="space-y-0.5 sm:space-y-1">
+                      <h4 className="font-medium text-xs sm:text-sm">Chat & Coordinate</h4>
+                      <p className="text-stone-500 text-[10px] sm:text-xs leading-relaxed">Interested readers will message you. Coordinate a safe, public pickup location.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 sm:gap-4">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-stone-100 flex items-center justify-center text-stone-900 font-serif italic shrink-0 text-sm sm:text-base">3</div>
+                    <div className="space-y-0.5 sm:space-y-1">
+                      <h4 className="font-medium text-xs sm:text-sm">Exchange & Rate</h4>
+                      <p className="text-stone-500 text-[10px] sm:text-xs leading-relaxed">Hand over the book and rate your experience. Build your reputation as a trusted sharer.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setShowHowItWorks(false)}
+                  className="w-full bg-stone-900 text-white py-3.5 sm:py-4 rounded-xl sm:rounded-2xl font-medium hover:bg-stone-800 transition-colors text-sm sm:text-base"
+                >
+                  Got it
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <div className="fixed top-20 right-4 z-[1500] pointer-events-none hidden md:block">
+        <div className="bg-red-50 text-red-600 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border border-red-100 shadow-sm flex items-center gap-2">
+          <ShieldAlert size={14} />
+          Strictly Free - No Selling
+        </div>
+      </div>
+
+      {/* Info Button */}
+      <button 
+        onClick={() => setShowHowItWorks(true)}
+        className="fixed bottom-8 left-8 p-4 bg-white border border-stone-200 rounded-full shadow-lg text-stone-400 hover:text-stone-900 transition-colors z-[1500]"
+      >
+        <Info size={24} />
+      </button>
+
+      {showNotificationSettings && (
+        <NotificationSettingsModal
+          userProfile={userProfile}
+          onClose={() => setShowNotificationSettings(false)}
+        />
+      )}
+    </div>
+  );
+}

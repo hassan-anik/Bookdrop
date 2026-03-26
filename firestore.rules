@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {uid}
+    // Fields:
+    //   - uid: string (required)
+    //   - displayName: string (required)
+    //   - email: string (required)
+    //   - photoURL: string (optional)
+    //   - givenCount: number (optional)
+    //   - receivedCount: number (optional)
+    //   - rating: number (optional)
+    //   - ratingCount: number (optional)
+    //   - location: map (optional) { lat: number, lng: number }
+    //
+    // Collection: reviews
+    // Document ID: {reviewId}
+    // Fields:
+    //   - reviewerId: string (required)
+    //   - revieweeId: string (required)
+    //   - bookId: string (required)
+    //   - rating: number (required, 1-5)
+    //   - comment: string (optional)
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: books
+    // Document ID: {bookId}
+    // Fields:
+    //   - ownerId: string (required)
+    //   - title: string (required)
+    //   - description: string (optional)
+    //   - category: string (required)
+    //   - condition: string (required, enum: New, Good, Used)
+    //   - imageUrl: string (optional)
+    //   - location: map (required) { lat: number, lng: number }
+    //   - status: string (required, enum: Available, Requested, Given Away)
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: chats
+    // Document ID: {chatId}
+    // Fields:
+    //   - bookId: string (required)
+    //   - participants: list (required, size 2)
+    //   - lastMessage: string (optional)
+    //   - updatedAt: timestamp (required)
+    //
+    // Collection: chats/{chatId}/messages
+    // Document ID: {messageId}
+    // Fields:
+    //   - chatId: string (required)
+    //   - senderId: string (required)
+    //   - text: string (required)
+    //   - createdAt: timestamp (required)
+    //   - flagged: bool (optional)
+    //
+    // Collection: reports
+    // Document ID: {reportId}
+    // Fields:
+    //   - reporterId: string (required)
+    //   - reportedUserId: string (required)
+    //   - reason: string (required)
+    //   - createdAt: timestamp (required)
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isBot(userId) {
+      return userId.matches('^bot_.*');
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isParticipant(chatData) {
+      return isAuthenticated() && request.auth.uid in chatData.participants;
+    }
+
+    function isValidBook(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() < 100 &&
+             data.category is string && data.category.size() > 0 &&
+             data.condition in ['New', 'Good', 'Used'] &&
+             data.status in ['Available', 'Requested', 'Given Away'] &&
+             data.location.lat is number && data.location.lng is number;
+    }
+
+    function isValidMessage(data) {
+      return data.text is string && data.text.size() > 0 && data.text.size() < 1000 &&
+             (data.senderId == request.auth.uid || isBot(data.senderId));
+    }
+
+    function isValidReview(data) {
+      return (data.reviewerId == request.auth.uid || isBot(data.reviewerId)) &&
+             data.rating is number && data.rating >= 1 && data.rating <= 5 &&
+             data.revieweeId != request.auth.uid;
+    }
+
+    // Rules
+    match /users/{uid} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(uid) || isBot(uid);
+      // Allow updating stats by others (for rating updates)
+      allow update: if isAuthenticated(); 
+    }
+
+    match /books/{bookId} {
+      allow read: if resource.data.status == 'Available' || isAuthenticated();
+      allow create: if isAuthenticated() && (request.resource.data.ownerId == request.auth.uid || isBot(request.resource.data.ownerId)) && isValidBook(request.resource.data);
+      allow update: if isAuthenticated() && (resource.data.ownerId == request.auth.uid || isBot(resource.data.ownerId) ||
+                    (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']) && 
+                     request.resource.data.status == 'Requested'));
+      allow delete: if isOwner(resource.data.ownerId) || isBot(resource.data.ownerId);
+    }
+
+    match /chats/{chatId} {
+      allow read: if isParticipant(resource.data) || (isAuthenticated() && (isBot(resource.data.participants[0]) || isBot(resource.data.participants[1])));
+      allow create: if isAuthenticated() && (request.auth.uid in request.resource.data.participants || isBot(request.resource.data.participants[0]) || isBot(request.resource.data.participants[1]));
+      allow update: if isParticipant(resource.data) || (isAuthenticated() && (isBot(resource.data.participants[0]) || isBot(resource.data.participants[1])));
+
+      match /messages/{messageId} {
+        allow read: if isParticipant(get(/databases/$(database)/documents/chats/$(chatId)).data) || isAuthenticated();
+        allow create: if (isParticipant(get(/databases/$(database)/documents/chats/$(chatId)).data) || isAuthenticated()) && isValidMessage(request.resource.data);
+      }
+    }
+
+    match /reports/{reportId} {
+      allow create: if isAuthenticated() && request.resource.data.reporterId == request.auth.uid;
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidReview(request.resource.data);
+    }
+  }
+}

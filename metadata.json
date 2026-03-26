@@ -1,0 +1,5 @@
+{
+  "name": "BookDrop",
+  "description": "A map-based platform for giving away books for free to people nearby. No buying, selling, or payments allowed.",
+  "requestFramePermissions": ["geolocation"]
+}

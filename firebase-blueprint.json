@@ -1,0 +1,114 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "givenCount": { "type": "number", "description": "Total books given away" },
+        "receivedCount": { "type": "number", "description": "Total books received" },
+        "rating": { "type": "number", "description": "Average rating" },
+        "ratingCount": { "type": "number", "description": "Total number of ratings" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        }
+      },
+      "required": ["uid", "displayName", "email"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "A review left for a user after a book exchange",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "reviewerId": { "type": "string" },
+        "revieweeId": { "type": "string" },
+        "bookId": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["reviewerId", "revieweeId", "bookId", "rating"]
+    },
+    "Book": {
+      "title": "Book",
+      "description": "Information about a book being given away",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "condition": { "type": "string", "enum": ["New", "Good", "Used"] },
+        "imageUrl": { "type": "string" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "status": { "type": "string", "enum": ["Available", "Requested", "Given Away"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "title", "category", "condition", "location", "status"]
+    },
+    "Chat": {
+      "title": "Chat",
+      "description": "A private conversation between book owner and requester",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "bookId": { "type": "string" },
+        "participants": { "type": "array", "items": { "type": "string" } },
+        "lastMessage": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["bookId", "participants"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "A single message within a chat",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "chatId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "flagged": { "type": "boolean" }
+      },
+      "required": ["chatId", "senderId", "text"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "A report filed against a user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "reporterId": { "type": "string" },
+        "reportedUserId": { "type": "string" },
+        "reason": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["reporterId", "reportedUserId", "reason"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": { "schema": "User", "description": "User profiles" },
+    "/books/{bookId}": { "schema": "Book", "description": "Book listings" },
+    "/chats/{chatId}": { "schema": "Chat", "description": "Chat sessions" },
+    "/chats/{chatId}/messages/{messageId}": { "schema": "Message", "description": "Chat messages" },
+    "/reports/{reportId}": { "schema": "Report", "description": "User reports" },
+    "/reviews/{reviewId}": { "schema": "Review", "description": "User reviews" }
+  }
+}
