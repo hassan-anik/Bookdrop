@@ -118,7 +118,7 @@ export default function BookMap({ userLocation, onChatRequest, onLogin, onUserCl
           userLocation.lat, userLocation.lng,
           book.location.lat, book.location.lng
         );
-        return dist <= 10;
+        return dist <= 5;
       });
     }
 
@@ -213,7 +213,7 @@ export default function BookMap({ userLocation, onChatRequest, onLogin, onUserCl
           <>
             <Circle 
               center={[userLocation.lat, userLocation.lng]}
-              radius={10000} // 10km in meters
+              radius={5000} // 5km in meters
               pathOptions={{
                 fillColor: '#3b82f6',
                 fillOpacity: 0.1,
@@ -299,7 +299,7 @@ export default function BookMap({ userLocation, onChatRequest, onLogin, onUserCl
         ) : (
           <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-stone-200 text-[10px] font-bold text-stone-900 uppercase tracking-widest flex items-center gap-2">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            Searching within 10km
+            Searching within 5km
           </div>
         )}
       </div>
