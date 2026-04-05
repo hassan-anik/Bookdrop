@@ -27,7 +27,7 @@ jobs:
       - name: Build
         # We pass the base path here so it works on GitHub Pages 
         # without breaking your live preview in AI Studio!
-        run: npx vite build --base=/Bookdrop/
+        run: npx vite build
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
