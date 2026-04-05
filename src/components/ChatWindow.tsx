@@ -20,6 +20,7 @@ export default function ChatWindow({ chatId, onBack, onReviewUser, onUserClick }
   const [chatInfo, setChatInfo] = useState<any>(null);
   const [bookInfo, setBookInfo] = useState<any>(null);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [isMarkingGiven, setIsMarkingGiven] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -93,11 +94,12 @@ export default function ChatWindow({ chatId, onBack, onReviewUser, onUserClick }
   };
 
   const markAsGivenAway = async () => {
-    if (!bookInfo || !auth.currentUser || bookInfo.ownerId !== auth.currentUser.uid || !chatInfo) return;
+    if (!bookInfo || !auth.currentUser || bookInfo.ownerId !== auth.currentUser.uid || !chatInfo || isMarkingGiven) return;
 
     const otherUserId = chatInfo.participants.find((id: string) => id !== auth.currentUser?.uid);
     if (!otherUserId) return;
 
+    setIsMarkingGiven(true);
     try {
       // Update book status
       await updateDoc(doc(db, 'books', bookInfo.id), {
@@ -128,6 +130,8 @@ export default function ChatWindow({ chatId, onBack, onReviewUser, onUserClick }
       alert("Book marked as Given Away. Thank you for sharing!");
     } catch (error) {
       console.error("Error updating book status:", error);
+    } finally {
+      setIsMarkingGiven(false);
     }
   };
 
@@ -180,11 +184,12 @@ export default function ChatWindow({ chatId, onBack, onReviewUser, onUserClick }
           {bookInfo?.ownerId === auth.currentUser?.uid && bookInfo?.status !== 'Given Away' && (
             <button 
               onClick={markAsGivenAway}
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-green-50 text-green-600 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border border-green-100 hover:bg-green-100 transition-colors"
+              disabled={isMarkingGiven}
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-green-50 text-green-600 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border border-green-100 hover:bg-green-100 transition-colors disabled:opacity-50"
             >
               <CheckCircle2 size={14} />
-              <span className="hidden sm:inline">Mark Given Away</span>
-              <span className="sm:hidden">Given</span>
+              <span className="hidden sm:inline">{isMarkingGiven ? 'Marking...' : 'Mark Given Away'}</span>
+              <span className="sm:hidden">{isMarkingGiven ? '...' : 'Given'}</span>
             </button>
           )}
           {bookInfo?.status === 'Given Away' && onReviewUser && (
@@ -215,17 +220,15 @@ export default function ChatWindow({ chatId, onBack, onReviewUser, onUserClick }
           <div className="px-4 py-2 bg-stone-100 rounded-full text-[10px] text-stone-500 font-bold uppercase tracking-widest border border-stone-200">
             Safety Tip: Meet in a public place
           </div>
-          <div className="max-w-xs text-center text-[10px] text-stone-400 uppercase tracking-widest font-bold leading-relaxed px-8">
-            This platform is strictly for free exchanges. Selling is prohibited.
-          </div>
           
           {bookInfo?.ownerId === auth.currentUser?.uid && bookInfo?.status !== 'Given Away' && (
             <button 
               onClick={markAsGivenAway}
-              className="mt-2 flex items-center gap-2 px-6 py-3 bg-green-50 text-green-600 rounded-full text-xs font-bold uppercase tracking-wider border border-green-200 hover:bg-green-100 transition-all shadow-sm"
+              disabled={isMarkingGiven}
+              className="mt-2 flex items-center gap-2 px-6 py-3 bg-green-50 text-green-600 rounded-full text-xs font-bold uppercase tracking-wider border border-green-200 hover:bg-green-100 transition-all shadow-sm disabled:opacity-50"
             >
               <CheckCircle2 size={18} />
-              Mark Book as Given Away
+              {isMarkingGiven ? 'Marking...' : 'Mark Book as Given Away'}
             </button>
           )}
         </div>
@@ -258,6 +261,10 @@ export default function ChatWindow({ chatId, onBack, onReviewUser, onUserClick }
 
       {/* Input */}
       <div className="p-4 bg-white border-t border-stone-200">
+        <div className="mb-2 text-[10px] text-stone-400 uppercase tracking-widest font-bold flex items-center gap-1">
+          <ShieldAlert size={10} />
+          Strictly free - no selling
+        </div>
         <form onSubmit={handleSendMessage} className="flex items-center gap-2">
           <input
             type="text"
