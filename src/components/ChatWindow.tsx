@@ -180,10 +180,11 @@ export default function ChatWindow({ chatId, onBack, onReviewUser, onUserClick }
           {bookInfo?.ownerId === auth.currentUser?.uid && bookInfo?.status !== 'Given Away' && (
             <button 
               onClick={markAsGivenAway}
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-600 rounded-full text-[10px] font-bold uppercase tracking-wider border border-green-100 hover:bg-green-100 transition-colors"
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-green-50 text-green-600 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider border border-green-100 hover:bg-green-100 transition-colors"
             >
               <CheckCircle2 size={14} />
-              Mark Given Away
+              <span className="hidden sm:inline">Mark Given Away</span>
+              <span className="sm:hidden">Given</span>
             </button>
           )}
           {bookInfo?.status === 'Given Away' && onReviewUser && (
@@ -217,6 +218,16 @@ export default function ChatWindow({ chatId, onBack, onReviewUser, onUserClick }
           <div className="max-w-xs text-center text-[10px] text-stone-400 uppercase tracking-widest font-bold leading-relaxed px-8">
             This platform is strictly for free exchanges. Selling is prohibited.
           </div>
+          
+          {bookInfo?.ownerId === auth.currentUser?.uid && bookInfo?.status !== 'Given Away' && (
+            <button 
+              onClick={markAsGivenAway}
+              className="mt-2 flex items-center gap-2 px-6 py-3 bg-green-50 text-green-600 rounded-full text-xs font-bold uppercase tracking-wider border border-green-200 hover:bg-green-100 transition-all shadow-sm"
+            >
+              <CheckCircle2 size={18} />
+              Mark Book as Given Away
+            </button>
+          )}
         </div>
 
         {messages.map((msg) => {

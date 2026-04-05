@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { db, collection, query, where, getDocs, doc, getDoc } from '../firebase';
+import { db, collection, query, where, getDocs, doc, getDoc, deleteDoc } from '../firebase';
 import { UserProfile, BookListing, Review } from '../types';
-import { X, Star, BookOpen, Award, ShieldCheck, MapPin, User, Calendar } from 'lucide-react';
+import { X, Star, BookOpen, Award, ShieldCheck, MapPin, User, Calendar, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { auth } from '../firebase';
 
 interface UserProfileModalProps {
   userId: string;
@@ -46,6 +47,18 @@ export default function UserProfileModal({ userId, onClose }: UserProfileModalPr
 
     fetchUserData();
   }, [userId]);
+
+  const handleDeleteBook = async (bookId: string) => {
+    if (window.confirm("Are you sure you want to delete this book?")) {
+      try {
+        await deleteDoc(doc(db, 'books', bookId));
+        setBooks(books.filter(b => b.id !== bookId));
+      } catch (error) {
+        console.error("Error deleting book:", error);
+        alert("Failed to delete book. Please try again.");
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -157,7 +170,16 @@ export default function UserProfileModal({ userId, onClose }: UserProfileModalPr
             {books.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {books.map(book => (
-                  <div key={book.id} className="flex gap-4 p-4 bg-white border border-stone-100 rounded-2xl shadow-sm hover:shadow-md transition-all">
+                  <div key={book.id} className="flex gap-4 p-4 bg-white border border-stone-100 rounded-2xl shadow-sm hover:shadow-md transition-all relative group">
+                    {auth.currentUser?.uid === userId && (
+                      <button 
+                        onClick={() => handleDeleteBook(book.id)}
+                        className="absolute top-2 right-2 p-1.5 bg-white/80 backdrop-blur-sm text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
+                        title="Delete Book"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                     <div className="w-16 h-20 bg-stone-100 rounded-xl overflow-hidden shrink-0">
                       {book.imageUrl ? (
                         <img src={book.imageUrl} alt={book.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -167,7 +189,7 @@ export default function UserProfileModal({ userId, onClose }: UserProfileModalPr
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-col justify-center">
+                    <div className="flex flex-col justify-center pr-6">
                       <h4 className="text-sm font-bold text-stone-900 line-clamp-1">{book.title}</h4>
                       <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mt-1">{book.category}</p>
                       <div className={`mt-2 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded w-fit ${

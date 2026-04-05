@@ -11,9 +11,10 @@ interface NavbarProps {
   onAddBook: () => void;
   onSupport: () => void;
   onSettings: () => void;
+  onProfileClick?: () => void;
 }
 
-export default function Navbar({ user, userProfile, onLogout, onLogin, onAddBook, onSupport, onSettings }: NavbarProps) {
+export default function Navbar({ user, userProfile, onLogout, onLogin, onAddBook, onSupport, onSettings, onProfileClick }: NavbarProps) {
   return (
     <nav className="bg-white border-b border-stone-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-30">
       <div className="flex items-center gap-3 sm:gap-4">
@@ -48,7 +49,10 @@ export default function Navbar({ user, userProfile, onLogout, onLogin, onAddBook
         
         {user ? (
           <div className="flex items-center gap-3 pl-4 border-l border-stone-100">
-            <div className="text-right hidden sm:block">
+            <div 
+              className="text-right hidden sm:block cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={onProfileClick}
+            >
               <p className="text-xs font-medium text-stone-900">{user.displayName}</p>
               <div className="flex items-center gap-2 mt-0.5">
                 <div className="flex items-center gap-1 text-[9px] text-stone-400 font-bold uppercase tracking-widest">
@@ -63,9 +67,10 @@ export default function Navbar({ user, userProfile, onLogout, onLogin, onAddBook
             </div>
             <img 
               src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}`} 
-              className="w-8 h-8 rounded-full border border-stone-200"
+              className="w-8 h-8 rounded-full border border-stone-200 cursor-pointer hover:opacity-80 transition-opacity"
               alt="Profile"
               referrerPolicy="no-referrer"
+              onClick={onProfileClick}
             />
             <button 
               onClick={onSettings}

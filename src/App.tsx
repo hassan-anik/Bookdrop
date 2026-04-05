@@ -150,6 +150,7 @@ export default function App() {
         onAddBook={() => setShowListingForm(true)}
         onSupport={() => setShowSupportModal(true)}
         onSettings={() => setShowNotificationSettings(true)}
+        onProfileClick={() => user && setSelectedUserId(user.uid)}
       />
       
       <main className="flex-1 relative overflow-hidden flex flex-col">

@@ -3,9 +3,9 @@ import { MapContainer, TileLayer, Marker, useMap, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import { db, collection, query, where, onSnapshot } from '../firebase';
 import { BookListing, UserProfile } from '../types';
-import { MapPin, Book as BookIcon, X, MessageCircle, Info, ShieldAlert, Star, BookOpen, User, Filter, ChevronRight, ChevronLeft } from 'lucide-react';
+import { MapPin, Book as BookIcon, X, MessageCircle, Info, ShieldAlert, Star, BookOpen, User, Filter, ChevronRight, ChevronLeft, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { auth, addDoc, serverTimestamp, getDocs, handleFirestoreError, OperationType, doc, getDoc } from '../firebase';
+import { auth, addDoc, serverTimestamp, getDocs, handleFirestoreError, OperationType, doc, getDoc, deleteDoc } from '../firebase';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 const CATEGORIES = ['All', 'Fiction', 'Non-Fiction', 'Textbook', 'Children', 'Mystery', 'Sci-Fi', 'Biography', 'Other'];
@@ -409,8 +409,27 @@ export default function BookMap({ userLocation, onChatRequest, onLogin, onUserCl
 
               <div className="pt-2">
                 {selectedBook.ownerId === auth.currentUser?.uid ? (
-                  <div className="text-center py-3 bg-stone-100 rounded-2xl text-stone-500 text-sm font-medium italic">
-                    This is your listing
+                  <div className="flex gap-2">
+                    <div className="flex-1 text-center py-3 bg-stone-100 rounded-2xl text-stone-500 text-sm font-medium italic">
+                      This is your listing
+                    </div>
+                    <button 
+                      onClick={async () => {
+                        if (window.confirm("Are you sure you want to delete this book?")) {
+                          try {
+                            await deleteDoc(doc(db, 'books', selectedBook.id));
+                            setSelectedBook(null);
+                          } catch (error) {
+                            console.error("Error deleting book:", error);
+                            alert("Failed to delete book.");
+                          }
+                        }
+                      }}
+                      className="px-4 bg-red-50 text-red-500 rounded-2xl font-medium hover:bg-red-100 transition-colors flex items-center justify-center"
+                      title="Delete Listing"
+                    >
+                      <Trash2 size={20} />
+                    </button>
                   </div>
                 ) : (
                   <button 
