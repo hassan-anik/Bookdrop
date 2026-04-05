@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, ShieldCheck, Smartphone, Lock, CheckCircle2, ArrowRight, Loader2 } from 'lucide-react';
+import { X, ShieldCheck, Smartphone, Lock, CheckCircle2, ArrowRight, Loader2, Building2, Copy } from 'lucide-react';
 
 interface PaymentGatewayProps {
-  method: 'bkash' | 'nagad';
+  method: 'bkash' | 'nagad' | 'ebl';
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -16,9 +16,10 @@ export default function PaymentGateway({ method, onClose, onSuccess }: PaymentGa
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [pin, setPin] = useState('');
+  const [copied, setCopied] = useState<string | null>(null);
 
-  const brandColor = method === 'bkash' ? '#D12053' : '#F7941D';
-  const brandName = method === 'bkash' ? 'bKash' : 'Nagad';
+  const brandColor = method === 'bkash' ? '#D12053' : method === 'nagad' ? '#F7941D' : '#0055A5';
+  const brandName = method === 'bkash' ? 'bKash' : method === 'nagad' ? 'Nagad' : 'Eastern Bank Limited';
 
   const handleNext = () => {
     if (step === 'amount') setStep('number');
@@ -36,12 +37,103 @@ export default function PaymentGateway({ method, onClose, onSuccess }: PaymentGa
     }
   };
 
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(label);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  if (method === 'ebl') {
+    return (
+      <div 
+        className="fixed inset-0 bg-stone-900/80 backdrop-blur-sm z-[5000] flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          className="bg-white w-full max-w-md rounded-[32px] overflow-hidden shadow-2xl relative"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div 
+            className="p-6 text-white flex items-center justify-between"
+            style={{ backgroundColor: brandColor }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-xs" style={{ color: brandColor }}>
+                EBL
+              </div>
+              <div>
+                <h3 className="font-bold text-lg leading-tight">Bank Transfer</h3>
+                <p className="text-white/80 text-xs">International & Local</p>
+              </div>
+            </div>
+            <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full transition-colors">
+              <X size={20} />
+            </button>
+          </div>
+
+          <div className="p-6 sm:p-8 space-y-6">
+            <div className="text-center space-y-2">
+              <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-blue-600 mx-auto mb-4">
+                <Building2 size={32} />
+              </div>
+              <h4 className="text-xl font-serif italic text-stone-900">Account Details</h4>
+              <p className="text-sm text-stone-500">Use these details to make a wire transfer or local bank deposit.</p>
+            </div>
+
+            <div className="space-y-3">
+              {[
+                { label: 'Bank Name', value: 'Eastern Bank PLC' },
+                { label: 'Account Name', value: 'MD. MAHMUDUL HASAN' },
+                { label: 'Account Number', value: '1331260104168' },
+                { label: 'Branch Name', value: 'Gulshan Avenue Branch' },
+                { label: 'Routing Number', value: '095261733' },
+                { label: 'SWIFT Code', value: 'EBLDBDDH' },
+              ].map((detail) => (
+                <div key={detail.label} className="flex items-center justify-between p-3 bg-stone-50 rounded-xl border border-stone-100">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest font-bold text-stone-400">{detail.label}</p>
+                    <p className="text-sm font-medium text-stone-900">{detail.value}</p>
+                  </div>
+                  <button 
+                    onClick={() => copyToClipboard(detail.value, detail.label)}
+                    className="p-2 text-stone-400 hover:text-stone-900 hover:bg-stone-200 rounded-lg transition-colors relative"
+                    title={`Copy ${detail.label}`}
+                  >
+                    {copied === detail.label ? <CheckCircle2 size={16} className="text-green-500" /> : <Copy size={16} />}
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-4">
+              <button 
+                onClick={onClose}
+                className="w-full py-4 bg-stone-900 text-white rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-stone-800 transition-all"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
-    <div className="fixed inset-0 bg-stone-900/80 backdrop-blur-sm z-[5000] flex items-center justify-center p-4">
+    <div 
+      className="fixed inset-0 bg-stone-900/80 backdrop-blur-sm z-[5000] flex items-center justify-center p-4"
+      onClick={onClose}
+    >
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
         className="bg-white w-full max-w-[360px] rounded-[32px] overflow-hidden shadow-2xl relative"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div 

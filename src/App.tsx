@@ -28,7 +28,7 @@ export default function App() {
   const [showListingForm, setShowListingForm] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'bkash' | 'nagad' | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'bkash' | 'nagad' | 'ebl' | null>(null);
   const [hasStarted, setHasStarted] = useState(false);
   const [pendingListing, setPendingListing] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -391,6 +391,24 @@ export default function App() {
                       <div className="text-left">
                         <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest">Local Support (BD)</p>
                         <p className="text-sm font-bold text-white">Nagad Checkout</p>
+                      </div>
+                    </div>
+                    <ChevronRight size={18} className="text-white/30 group-hover:text-white transition-colors" />
+                  </button>
+
+                  {/* EBL Bank Transfer Option */}
+                  <button 
+                    onClick={() => {
+                      setPaymentMethod('ebl');
+                      setShowSupportModal(false);
+                    }}
+                    className="group relative bg-[#0055A5] p-4 rounded-2xl flex items-center justify-between shadow-lg shadow-blue-500/10 hover:scale-[1.02] transition-transform"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-bold text-[#0055A5] text-xs">EBL</div>
+                      <div className="text-left">
+                        <p className="text-[10px] font-bold text-white/70 uppercase tracking-widest">International / Bank</p>
+                        <p className="text-sm font-bold text-white">EBL Bank Transfer</p>
                       </div>
                     </div>
                     <ChevronRight size={18} className="text-white/30 group-hover:text-white transition-colors" />
