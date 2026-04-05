@@ -15,6 +15,7 @@ import ChatWindow from './components/ChatWindow';
 import UserProfileModal from './components/UserProfileModal';
 import ReviewModal from './components/ReviewModal';
 import NotificationSettingsModal from './components/NotificationSettingsModal';
+import SafetyModal from './components/SafetyModal';
 import { useNotifications } from './hooks/useNotifications';
 import { motion, AnimatePresence } from 'motion/react';
 import PaymentGateway from './components/PaymentGateway';
@@ -27,6 +28,7 @@ export default function App() {
   const [showListingForm, setShowListingForm] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [showSafetyModal, setShowSafetyModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'bkash' | 'nagad' | 'ebl' | null>(null);
   const [pendingListing, setPendingListing] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -150,6 +152,7 @@ export default function App() {
         onAddBook={() => setShowListingForm(true)}
         onSupport={() => setShowSupportModal(true)}
         onSettings={() => setShowNotificationSettings(true)}
+        onSafety={() => setShowSafetyModal(true)}
         onProfileClick={() => user && setSelectedUserId(user.uid)}
       />
       
@@ -509,6 +512,10 @@ export default function App() {
           userProfile={userProfile}
           onClose={() => setShowNotificationSettings(false)}
         />
+      )}
+
+      {showSafetyModal && (
+        <SafetyModal onClose={() => setShowSafetyModal(false)} />
       )}
     </div>
   );

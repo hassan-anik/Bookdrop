@@ -11,10 +11,11 @@ interface NavbarProps {
   onAddBook: () => void;
   onSupport: () => void;
   onSettings: () => void;
+  onSafety: () => void;
   onProfileClick?: () => void;
 }
 
-export default function Navbar({ user, userProfile, onLogout, onLogin, onAddBook, onSupport, onSettings, onProfileClick }: NavbarProps) {
+export default function Navbar({ user, userProfile, onLogout, onLogin, onAddBook, onSupport, onSettings, onSafety, onProfileClick }: NavbarProps) {
   return (
     <nav className="bg-white border-b border-stone-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-30">
       <div className="flex items-center gap-3 sm:gap-4">
@@ -44,7 +45,7 @@ export default function Navbar({ user, userProfile, onLogout, onLogin, onAddBook
             Support
           </button>
           <a href="#" className="hover:text-stone-900 transition-colors">The Mission</a>
-          <a href="#" className="hover:text-stone-900 transition-colors">Safety</a>
+          <button onClick={onSafety} className="hover:text-stone-900 transition-colors">Safety</button>
         </div>
         
         {user ? (
