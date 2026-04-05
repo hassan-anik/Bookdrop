@@ -492,13 +492,6 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <div className="fixed top-20 right-4 z-[1500] pointer-events-none hidden md:block">
-        <div className="bg-red-50 text-red-600 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest border border-red-100 shadow-sm flex items-center gap-2">
-          <ShieldAlert size={14} />
-          Strictly Free - No Selling
-        </div>
-      </div>
-
       {/* Info Button */}
       <button 
         onClick={() => setShowHowItWorks(true)}
