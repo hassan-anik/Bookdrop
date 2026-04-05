@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { db, collection, query, where, getDocs, doc, getDoc, deleteDoc } from '../firebase';
 import { UserProfile, BookListing, Review } from '../types';
-import { X, Star, BookOpen, Award, ShieldCheck, MapPin, User, Calendar, Trash2 } from 'lucide-react';
+import { X, Star, BookOpen, Award, ShieldCheck, MapPin, User, Calendar, Trash2, Edit2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth } from '../firebase';
 
 interface UserProfileModalProps {
   userId: string;
   onClose: () => void;
+  onEditBook?: (book: BookListing) => void;
 }
 
-export default function UserProfileModal({ userId, onClose }: UserProfileModalProps) {
+export default function UserProfileModal({ userId, onClose, onEditBook }: UserProfileModalProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [books, setBooks] = useState<BookListing[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -172,13 +173,24 @@ export default function UserProfileModal({ userId, onClose }: UserProfileModalPr
                 {books.map(book => (
                   <div key={book.id} className="flex gap-4 p-4 bg-white border border-stone-100 rounded-2xl shadow-sm hover:shadow-md transition-all relative group">
                     {auth.currentUser?.uid === userId && (
-                      <button 
-                        onClick={() => handleDeleteBook(book.id)}
-                        className="absolute top-2 right-2 p-1.5 bg-white/80 backdrop-blur-sm text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50"
-                        title="Delete Book"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {onEditBook && (
+                          <button 
+                            onClick={() => onEditBook(book)}
+                            className="p-1.5 bg-white/80 backdrop-blur-sm text-stone-500 rounded-full hover:bg-stone-100 hover:text-stone-900"
+                            title="Edit Book"
+                          >
+                            <Edit2 size={14} />
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => handleDeleteBook(book.id)}
+                          className="p-1.5 bg-white/80 backdrop-blur-sm text-red-500 rounded-full hover:bg-red-50"
+                          title="Delete Book"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     )}
                     <div className="w-16 h-20 bg-stone-100 rounded-xl overflow-hidden shrink-0">
                       {book.imageUrl ? (

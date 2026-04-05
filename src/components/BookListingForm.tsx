@@ -1,12 +1,14 @@
-import React, { useState, useRef } from 'react';
-import { db, collection, addDoc, serverTimestamp, auth } from '../firebase';
-import { BookCondition } from '../types';
+import React, { useState, useRef, useEffect } from 'react';
+import { db, collection, addDoc, updateDoc, doc, serverTimestamp, auth } from '../firebase';
+import { BookCondition, BookListing } from '../types';
 import { X, Upload, MapPin, BookOpen, ShieldAlert, Plus, Sparkles, ThumbsUp, History, CheckCircle2, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import * as geofire from 'geofire-common';
 
 interface BookListingFormProps {
   onClose: () => void;
   userLocation: { lat: number; lng: number } | null;
+  existingBook?: BookListing;
 }
 
 const CATEGORIES = ['Fiction', 'Non-Fiction', 'Textbook', 'Children', 'Mystery', 'Sci-Fi', 'Biography', 'Other'];
@@ -34,17 +36,17 @@ const CONDITIONS: { value: BookCondition; label: string; desc: string; icon: Rea
   }
 ];
 
-export default function BookListingForm({ onClose, userLocation }: BookListingFormProps) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[0]);
-  const [condition, setCondition] = useState<BookCondition>('Good');
-  const [imageUrl, setImageUrl] = useState('');
+export default function BookListingForm({ onClose, userLocation, existingBook }: BookListingFormProps) {
+  const [title, setTitle] = useState(existingBook?.title || '');
+  const [description, setDescription] = useState(existingBook?.description || '');
+  const [category, setCategory] = useState(existingBook?.category || CATEGORIES[0]);
+  const [condition, setCondition] = useState<BookCondition>(existingBook?.condition || 'Good');
+  const [imageUrl, setImageUrl] = useState(existingBook?.imageUrl || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>('file');
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
-  const [isImageValid, setIsImageValid] = useState(false);
+  const [isImageValid, setIsImageValid] = useState(!!existingBook?.imageUrl);
   const [isbn, setIsbn] = useState('');
   const [isSearchingIsbn, setIsSearchingIsbn] = useState(false);
   const [isbnError, setIsbnError] = useState<string | null>(null);
@@ -209,21 +211,32 @@ export default function BookListingForm({ onClose, userLocation }: BookListingFo
 
     setIsSubmitting(true);
     try {
-      await addDoc(collection(db, 'books'), {
-        ownerId: auth.currentUser.uid,
-        ownerName: auth.currentUser.displayName,
+      const hash = geofire.geohashForLocation([userLocation.lat, userLocation.lng]);
+      
+      const bookData = {
         title,
         description,
         category,
         condition,
         imageUrl,
         location: userLocation,
-        status: 'Available',
-        createdAt: serverTimestamp()
-      });
+        geohash: hash,
+      };
+
+      if (existingBook) {
+        await updateDoc(doc(db, 'books', existingBook.id), bookData);
+      } else {
+        await addDoc(collection(db, 'books'), {
+          ...bookData,
+          ownerId: auth.currentUser.uid,
+          ownerName: auth.currentUser.displayName,
+          status: 'Available',
+          createdAt: serverTimestamp()
+        });
+      }
       onClose();
     } catch (error) {
-      console.error("Error adding book:", error);
+      console.error("Error saving book:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -264,7 +277,7 @@ export default function BookListingForm({ onClose, userLocation }: BookListingFo
               <BookOpen size={20} className="sm:w-6 sm:h-6" />
             </div>
             <div className="flex flex-col -space-y-1">
-              <h2 className="text-xl sm:text-2xl font-serif italic text-stone-900">List a New Book</h2>
+              <h2 className="text-xl sm:text-2xl font-serif italic text-stone-900">{existingBook ? 'Edit Book' : 'List a New Book'}</h2>
               <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.2em] text-stone-400">Neighborhood Exchange</span>
             </div>
           </div>
@@ -640,12 +653,12 @@ export default function BookListingForm({ onClose, userLocation }: BookListingFo
               {isSubmitting ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Publishing...</span>
+                  <span>{existingBook ? 'Saving...' : 'Publishing...'}</span>
                 </>
               ) : (
                 <>
                   <Plus size={20} />
-                  <span>Publish Listing</span>
+                  <span>{existingBook ? 'Save Changes' : 'Publish Listing'}</span>
                 </>
               )}
             </button>

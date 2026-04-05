@@ -16,6 +16,8 @@ import UserProfileModal from './components/UserProfileModal';
 import ReviewModal from './components/ReviewModal';
 import NotificationSettingsModal from './components/NotificationSettingsModal';
 import SafetyModal from './components/SafetyModal';
+import PrivacyPolicyModal from './components/PrivacyPolicyModal';
+import TermsOfServiceModal from './components/TermsOfServiceModal';
 import { useNotifications } from './hooks/useNotifications';
 import { motion, AnimatePresence } from 'motion/react';
 import PaymentGateway from './components/PaymentGateway';
@@ -29,6 +31,8 @@ export default function App() {
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [showSafetyModal, setShowSafetyModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'bkash' | 'nagad' | 'ebl' | null>(null);
   const [pendingListing, setPendingListing] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -37,6 +41,7 @@ export default function App() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+  const [editingBook, setEditingBook] = useState<any | null>(null);
 
   useNotifications(userProfile);
 
@@ -153,6 +158,8 @@ export default function App() {
         onSupport={() => setShowSupportModal(true)}
         onSettings={() => setShowNotificationSettings(true)}
         onSafety={() => setShowSafetyModal(true)}
+        onPrivacy={() => setShowPrivacyModal(true)}
+        onTerms={() => setShowTermsModal(true)}
         onProfileClick={() => user && setSelectedUserId(user.uid)}
       />
       
@@ -167,6 +174,10 @@ export default function App() {
               }}
               onLogin={handleLogin}
               onUserClick={(userId) => setSelectedUserId(userId)}
+              onEditBook={(book) => {
+                setEditingBook(book);
+                setShowListingForm(true);
+              }}
             />
           </div>
           
@@ -268,8 +279,12 @@ export default function App() {
       <AnimatePresence>
         {showListingForm && user && (
           <BookListingForm 
-            onClose={() => setShowListingForm(false)} 
+            onClose={() => {
+              setShowListingForm(false);
+              setEditingBook(null);
+            }} 
             userLocation={userLocation}
+            existingBook={editingBook}
           />
         )}
       </AnimatePresence>
@@ -279,6 +294,11 @@ export default function App() {
           <UserProfileModal 
             userId={selectedUserId} 
             onClose={() => setSelectedUserId(null)} 
+            onEditBook={(book) => {
+              setEditingBook(book);
+              setShowListingForm(true);
+              setSelectedUserId(null);
+            }}
           />
         )}
       </AnimatePresence>
@@ -509,6 +529,14 @@ export default function App() {
 
       {showSafetyModal && (
         <SafetyModal onClose={() => setShowSafetyModal(false)} />
+      )}
+
+      {showPrivacyModal && (
+        <PrivacyPolicyModal onClose={() => setShowPrivacyModal(false)} />
+      )}
+
+      {showTermsModal && (
+        <TermsOfServiceModal onClose={() => setShowTermsModal(false)} />
       )}
     </div>
   );

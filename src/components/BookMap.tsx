@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, useMap, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import { db, collection, query, where, onSnapshot } from '../firebase';
 import { BookListing, UserProfile } from '../types';
-import { MapPin, Book as BookIcon, X, MessageCircle, Info, ShieldAlert, Star, BookOpen, User, Filter, ChevronRight, ChevronLeft, Trash2 } from 'lucide-react';
+import { MapPin, Book as BookIcon, X, MessageCircle, Info, ShieldAlert, Star, BookOpen, User, Filter, ChevronRight, ChevronLeft, Trash2, Edit2, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, addDoc, serverTimestamp, getDocs, handleFirestoreError, OperationType, doc, getDoc, deleteDoc } from '../firebase';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -15,6 +15,7 @@ interface BookMapProps {
   onChatRequest: (chatId: string) => void;
   onLogin: () => void;
   onUserClick?: (userId: string) => void;
+  onEditBook?: (book: BookListing) => void;
 }
 
 // Custom Marker Icon using Lucide
@@ -53,10 +54,11 @@ function MapController({ center, zoom }: { center: [number, number]; zoom: numbe
   return null;
 }
 
-export default function BookMap({ userLocation, onChatRequest, onLogin, onUserClick }: BookMapProps) {
+export default function BookMap({ userLocation, onChatRequest, onLogin, onUserClick, onEditBook }: BookMapProps) {
   const [allBooks, setAllBooks] = useState<BookListing[]>([]);
   const [filteredBooks, setFilteredBooks] = useState<BookListing[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedBook, setSelectedBook] = useState<BookListing | null>(null);
   const [ownerProfile, setOwnerProfile] = useState<UserProfile | null>(null);
   const [isRequesting, setIsRequesting] = useState(false);
@@ -106,6 +108,15 @@ export default function BookMap({ userLocation, onChatRequest, onLogin, onUserCl
   useEffect(() => {
     let filtered = [...allBooks];
 
+    // Filter by Search Query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(book => 
+        book.title.toLowerCase().includes(query) || 
+        (book.description && book.description.toLowerCase().includes(query))
+      );
+    }
+
     // Filter by Category
     if (selectedCategory !== 'All') {
       filtered = filtered.filter(book => book.category === selectedCategory);
@@ -123,7 +134,7 @@ export default function BookMap({ userLocation, onChatRequest, onLogin, onUserCl
     }
 
     setFilteredBooks(filtered);
-  }, [allBooks, selectedCategory, userLocation]);
+  }, [allBooks, selectedCategory, userLocation, searchQuery]);
 
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371;
@@ -265,13 +276,31 @@ export default function BookMap({ userLocation, onChatRequest, onLogin, onUserCl
 
       {/* Category Filter Bar */}
       <div className="absolute top-16 left-0 right-0 z-[1000] px-4 md:px-8 pointer-events-none">
-        <div className="max-w-7xl mx-auto flex items-center gap-3">
-          <div className="bg-white/90 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-stone-200 pointer-events-auto shrink-0">
-            <Filter size={18} className="text-stone-900" />
+        <div className="max-w-7xl mx-auto flex flex-col gap-3">
+          {/* Search Bar */}
+          <div className="bg-white/90 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-stone-200 pointer-events-auto flex items-center gap-2 max-w-md">
+            <Search size={18} className="text-stone-400 ml-2" />
+            <input 
+              type="text"
+              placeholder="Search by title or author..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-stone-900 placeholder:text-stone-400 py-1 outline-none"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="p-1 text-stone-400 hover:text-stone-900">
+                <X size={16} />
+              </button>
+            )}
           </div>
-          
-          <div className="flex-1 overflow-x-auto no-scrollbar pointer-events-auto">
-            <div className="flex gap-2 py-1">
+
+          <div className="flex items-center gap-3">
+            <div className="bg-white/90 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-stone-200 pointer-events-auto shrink-0">
+              <Filter size={18} className="text-stone-900" />
+            </div>
+            
+            <div className="flex-1 overflow-x-auto no-scrollbar pointer-events-auto">
+              <div className="flex gap-2 py-1">
               {CATEGORIES.map(cat => (
                 <button
                   key={cat}
@@ -288,6 +317,7 @@ export default function BookMap({ userLocation, onChatRequest, onLogin, onUserCl
             </div>
           </div>
         </div>
+      </div>
       </div>
 
       <div className="absolute top-4 left-4 z-[1000] flex flex-col gap-2">
@@ -413,6 +443,18 @@ export default function BookMap({ userLocation, onChatRequest, onLogin, onUserCl
                     <div className="flex-1 text-center py-3 bg-stone-100 rounded-2xl text-stone-500 text-sm font-medium italic">
                       This is your listing
                     </div>
+                    {onEditBook && (
+                      <button 
+                        onClick={() => {
+                          onEditBook(selectedBook);
+                          setSelectedBook(null);
+                        }}
+                        className="p-3 bg-stone-100 text-stone-500 rounded-2xl hover:bg-stone-200 hover:text-stone-900 transition-colors"
+                        title="Edit Listing"
+                      >
+                        <Edit2 size={20} />
+                      </button>
+                    )}
                     <button 
                       onClick={async () => {
                         if (window.confirm("Are you sure you want to delete this book?")) {

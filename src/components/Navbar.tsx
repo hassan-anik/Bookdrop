@@ -12,10 +12,12 @@ interface NavbarProps {
   onSupport: () => void;
   onSettings: () => void;
   onSafety: () => void;
+  onPrivacy: () => void;
+  onTerms: () => void;
   onProfileClick?: () => void;
 }
 
-export default function Navbar({ user, userProfile, onLogout, onLogin, onAddBook, onSupport, onSettings, onSafety, onProfileClick }: NavbarProps) {
+export default function Navbar({ user, userProfile, onLogout, onLogin, onAddBook, onSupport, onSettings, onSafety, onPrivacy, onTerms, onProfileClick }: NavbarProps) {
   return (
     <nav className="bg-white border-b border-stone-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-30">
       <div className="flex items-center gap-3 sm:gap-4">
@@ -45,8 +47,14 @@ export default function Navbar({ user, userProfile, onLogout, onLogin, onAddBook
             Support
           </button>
           <a href="#" className="hover:text-stone-900 transition-colors">The Mission</a>
-          <button onClick={onSafety} className="hover:text-stone-900 transition-colors">Safety</button>
+          <button onClick={onPrivacy} className="hover:text-stone-900 transition-colors">Privacy</button>
+          <button onClick={onTerms} className="hover:text-stone-900 transition-colors">Terms</button>
         </div>
+        
+        <button onClick={onSafety} className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:text-stone-900 transition-colors">
+          <ShieldAlert size={14} />
+          <span className="hidden sm:inline">Safety</span>
+        </button>
         
         {user ? (
           <div className="flex items-center gap-3 pl-4 border-l border-stone-100">

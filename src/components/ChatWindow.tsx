@@ -24,18 +24,22 @@ export default function ChatWindow({ chatId, onBack, onReviewUser, onUserClick }
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let unsubscribeBook: (() => void) | undefined;
+
     const chatRef = doc(db, 'chats', chatId);
     const unsubscribeChat = onSnapshot(chatRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
         setChatInfo(data);
         
-        // Fetch book info
-        getDoc(doc(db, 'books', data.bookId)).then(bookSnap => {
-          if (bookSnap.exists()) {
-            setBookInfo({ id: bookSnap.id, ...bookSnap.data() });
-          }
-        }).catch(err => handleFirestoreError(err, OperationType.GET, `books/${data.bookId}`));
+        // Listen to book info
+        if (!unsubscribeBook) {
+          unsubscribeBook = onSnapshot(doc(db, 'books', data.bookId), (bookSnap) => {
+            if (bookSnap.exists()) {
+              setBookInfo({ id: bookSnap.id, ...bookSnap.data() });
+            }
+          }, (err) => handleFirestoreError(err, OperationType.GET, `books/${data.bookId}`));
+        }
       }
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, `chats/${chatId}`);
@@ -58,6 +62,7 @@ export default function ChatWindow({ chatId, onBack, onReviewUser, onUserClick }
 
     return () => {
       unsubscribeChat();
+      if (unsubscribeBook) unsubscribeBook();
       unsubscribeMessages();
     };
   }, [chatId]);
