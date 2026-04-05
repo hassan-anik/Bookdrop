@@ -17,7 +17,6 @@ import ReviewModal from './components/ReviewModal';
 import NotificationSettingsModal from './components/NotificationSettingsModal';
 import { useNotifications } from './hooks/useNotifications';
 import { motion, AnimatePresence } from 'motion/react';
-import LandingHero from './components/LandingHero';
 import PaymentGateway from './components/PaymentGateway';
 import { Book, MessageCircle, Plus, Map as MapIcon, ShieldAlert, Info, X, Heart, BookOpen, MapPin, Star, ChevronRight } from 'lucide-react';
 
@@ -29,7 +28,6 @@ export default function App() {
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'bkash' | 'nagad' | 'ebl' | null>(null);
-  const [hasStarted, setHasStarted] = useState(false);
   const [pendingListing, setPendingListing] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -43,7 +41,6 @@ export default function App() {
   useEffect(() => {
     // If user is logged in, skip landing
     if (user) {
-      setHasStarted(true);
       if (pendingListing) {
         setShowListingForm(true);
         setPendingListing(false);
@@ -102,7 +99,6 @@ export default function App() {
     setLoginError(null);
     try {
       await signInWithPopup(auth, googleProvider);
-      setHasStarted(true);
     } catch (error: any) {
       if (error.code === 'auth/popup-closed-by-user') {
         // User closed the popup, no need to show a scary error
@@ -117,7 +113,6 @@ export default function App() {
   };
   const handleLogout = () => {
     signOut(auth);
-    setHasStarted(false);
   };
 
   const handleListABook = async () => {
@@ -134,27 +129,6 @@ export default function App() {
       <div className="flex items-center justify-center h-screen bg-stone-50">
         <div className="text-stone-400 animate-pulse font-serif italic text-xl">Loading BookDrop...</div>
       </div>
-    );
-  }
-
-  if (!hasStarted && !user) {
-    return (
-      <>
-        {loginError && (
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-red-500 text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3 max-w-md w-full">
-            <div className="flex-1 text-sm">{loginError}</div>
-            <button onClick={() => setLoginError(null)} className="text-white hover:text-red-200">
-              &times;
-            </button>
-          </div>
-        )}
-        <LandingHero 
-          onGetStarted={() => setHasStarted(true)} 
-          onLogin={handleLogin} 
-          onListABook={handleListABook} 
-          onSupport={() => setShowSupportModal(true)}
-        />
-      </>
     );
   }
 
