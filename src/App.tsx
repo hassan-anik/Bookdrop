@@ -18,6 +18,7 @@ import NotificationSettingsModal from './components/NotificationSettingsModal';
 import SafetyModal from './components/SafetyModal';
 import PrivacyPolicyModal from './components/PrivacyPolicyModal';
 import TermsOfServiceModal from './components/TermsOfServiceModal';
+import PromotedAppsModal from './components/PromotedAppsModal';
 import { useNotifications } from './hooks/useNotifications';
 import { motion, AnimatePresence } from 'motion/react';
 import PaymentGateway from './components/PaymentGateway';
@@ -33,6 +34,8 @@ export default function App() {
   const [showSafetyModal, setShowSafetyModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showMoreApps, setShowMoreApps] = useState(false);
+  const [showSponsorBanner, setShowSponsorBanner] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState<'bkash' | 'nagad' | 'ebl' | null>(null);
   const [pendingListing, setPendingListing] = useState(false);
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
@@ -160,6 +163,7 @@ export default function App() {
         onSafety={() => setShowSafetyModal(true)}
         onPrivacy={() => setShowPrivacyModal(true)}
         onTerms={() => setShowTermsModal(true)}
+        onMoreApps={() => setShowMoreApps(true)}
         onProfileClick={() => user && setSelectedUserId(user.uid)}
       />
       
@@ -520,6 +524,44 @@ export default function App() {
         <Info size={24} />
       </button>
 
+      {/* Sponsor Banner */}
+      <AnimatePresence>
+        {showSponsorBanner && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-8 right-8 z-[1500] max-w-sm w-[calc(100%-4rem)] sm:w-auto"
+          >
+            <div className="bg-white rounded-2xl shadow-2xl border border-stone-200 p-4 flex items-start gap-4 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-gradient-to-r from-indigo-50 to-purple-50 opacity-50 pointer-events-none" />
+              <div className="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center text-white shrink-0 relative z-10 shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              </div>
+              <div className="flex-1 relative z-10 pr-6">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 mb-1">Developer Pick</p>
+                <h4 className="text-sm font-bold text-stone-900 leading-tight">100 Card Game Online PvP</h4>
+                <p className="text-xs text-stone-600 mt-1 line-clamp-1">Fast Multiplayer Fun! Play now.</p>
+                <a 
+                  href="https://play.google.com/store/apps/details?id=app.emergent.pointchase03e0c36e&pcampaignid=web_share" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-block mt-2 text-xs font-bold text-indigo-600 hover:text-indigo-700 underline underline-offset-2"
+                >
+                  Download Free
+                </a>
+              </div>
+              <button 
+                onClick={() => setShowSponsorBanner(false)}
+                className="absolute top-2 right-2 p-1.5 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded-full transition-colors z-20"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {showNotificationSettings && (
         <NotificationSettingsModal
           userProfile={userProfile}
@@ -538,6 +580,12 @@ export default function App() {
       {showTermsModal && (
         <TermsOfServiceModal onClose={() => setShowTermsModal(false)} />
       )}
+
+      <AnimatePresence>
+        {showMoreApps && (
+          <PromotedAppsModal onClose={() => setShowMoreApps(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

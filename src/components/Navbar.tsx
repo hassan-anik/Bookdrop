@@ -14,10 +14,11 @@ interface NavbarProps {
   onSafety: () => void;
   onPrivacy: () => void;
   onTerms: () => void;
+  onMoreApps: () => void;
   onProfileClick?: () => void;
 }
 
-export default function Navbar({ user, userProfile, onLogout, onLogin, onAddBook, onSupport, onSettings, onSafety, onPrivacy, onTerms, onProfileClick }: NavbarProps) {
+export default function Navbar({ user, userProfile, onLogout, onLogin, onAddBook, onSupport, onSettings, onSafety, onPrivacy, onTerms, onMoreApps, onProfileClick }: NavbarProps) {
   return (
     <nav className="bg-white border-b border-stone-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-30">
       <div className="flex items-center gap-3 sm:gap-4">
@@ -45,6 +46,10 @@ export default function Navbar({ user, userProfile, onLogout, onLogin, onAddBook
           <button onClick={onSupport} className="hover:text-stone-900 transition-colors flex items-center gap-2 text-rose-500">
             <Heart size={14} className="fill-rose-500" />
             Support
+          </button>
+          <button onClick={onMoreApps} className="hover:text-stone-900 transition-colors flex items-center gap-2 text-indigo-500">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+            More Apps
           </button>
           <a href="#" className="hover:text-stone-900 transition-colors">The Mission</a>
           <button onClick={onPrivacy} className="hover:text-stone-900 transition-colors">Privacy</button>

@@ -254,6 +254,48 @@ export default function UserProfileModal({ userId, onClose, onEditBook }: UserPr
               </div>
             </div>
           )}
+
+          {/* Developer Spotlight */}
+          <div className="space-y-4 pt-6 border-t border-stone-100 mt-8">
+            <div className="flex items-center gap-3">
+              <div className="w-6 h-6 rounded-full bg-indigo-50 flex items-center justify-center text-[10px] font-bold text-indigo-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+              </div>
+              <h3 className="text-sm font-bold uppercase tracking-widest text-indigo-500">Discover More from the Developer</h3>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4">
+              <a 
+                href="https://mostpopularyoutubechannel.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex gap-4 p-4 bg-red-50 border border-red-100 rounded-2xl shadow-sm hover:shadow-md transition-all group"
+              >
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-red-500 shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg>
+                </div>
+                <div className="flex flex-col justify-center">
+                  <h4 className="text-sm font-bold text-stone-900 group-hover:text-stone-700 transition-colors">Most Popular Youtube Channel</h4>
+                  <p className="text-[10px] text-stone-600 mt-1 line-clamp-2">Global YouTube Channel Rankings. Track, analyze, and predict the most subscribed YouTube channels across 197 countries in real-time.</p>
+                </div>
+              </a>
+
+              <a 
+                href="https://play.google.com/store/apps/details?id=app.emergent.pointchase03e0c36e&pcampaignid=web_share"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex gap-4 p-4 bg-blue-50 border border-blue-100 rounded-2xl shadow-sm hover:shadow-md transition-all group"
+              >
+                <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-blue-500 shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="6" x2="10" y1="12" y2="12"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="15" x2="15.01" y1="13" y2="13"/><line x1="18" x2="18.01" y1="11" y2="11"/><rect width="20" height="12" x="2" y="6" rx="2"/></svg>
+                </div>
+                <div className="flex flex-col justify-center">
+                  <h4 className="text-sm font-bold text-stone-900 group-hover:text-stone-700 transition-colors">100 Card Game Online PvP</h4>
+                  <p className="text-[10px] text-stone-600 mt-1 line-clamp-2">🔥 100 Card Game – Fast Multiplayer Fun! Play a fast-paced online card game where strategy and quick thinking decide the winner.</p>
+                </div>
+              </a>
+            </div>
+          </div>
         </div>
       </motion.div>
     </div>
