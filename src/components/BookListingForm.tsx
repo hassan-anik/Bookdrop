@@ -4,6 +4,46 @@ import { BookCondition, BookListing } from '../types';
 import { X, Upload, MapPin, BookOpen, ShieldAlert, Plus, Sparkles, ThumbsUp, History, CheckCircle2, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import * as geofire from 'geofire-common';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
+import { renderToStaticMarkup } from 'react-dom/server';
+
+const customIcon = L.divIcon({
+  html: renderToStaticMarkup(
+    <div className="relative -translate-x-1/2 -translate-y-full">
+      <div className="bg-stone-900 text-white p-2 rounded-full shadow-lg border-2 border-white">
+        <BookOpen size={16} />
+      </div>
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-stone-900"></div>
+    </div>
+  ),
+  className: 'custom-marker-icon',
+  iconSize: [32, 32],
+  iconAnchor: [16, 32],
+});
+
+function LocationPickerMarker({ position, setPosition }: { position: {lat: number, lng: number}, setPosition: (pos: {lat: number, lng: number}) => void }) {
+  useMapEvents({
+    click(e) {
+      setPosition({ lat: e.latlng.lat, lng: e.latlng.lng });
+    },
+  });
+
+  return (
+    <Marker 
+      position={[position.lat, position.lng]} 
+      draggable={true} 
+      icon={customIcon}
+      eventHandlers={{
+        dragend(e) {
+          const marker = e.target;
+          const pos = marker.getLatLng();
+          setPosition({ lat: pos.lat, lng: pos.lng });
+        }
+      }}
+    />
+  );
+}
 
 interface BookListingFormProps {
   onClose: () => void;
@@ -50,7 +90,16 @@ export default function BookListingForm({ onClose, userLocation, existingBook }:
   const [isbn, setIsbn] = useState('');
   const [isSearchingIsbn, setIsSearchingIsbn] = useState(false);
   const [isbnError, setIsbnError] = useState<string | null>(null);
+  const [listingLocation, setListingLocation] = useState<{lat: number, lng: number} | null>(
+    existingBook?.location || userLocation
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!listingLocation && userLocation) {
+      setListingLocation(userLocation);
+    }
+  }, [userLocation, listingLocation]);
 
   const handleIsbnSearch = async () => {
     if (!isbn.trim()) return;
@@ -197,7 +246,7 @@ export default function BookListingForm({ onClose, userLocation, existingBook }:
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth.currentUser || !userLocation) return;
+    if (!auth.currentUser || !listingLocation) return;
 
     if (!imageUrl) {
       setImageError('Please provide a book cover image.');
@@ -211,7 +260,7 @@ export default function BookListingForm({ onClose, userLocation, existingBook }:
 
     setIsSubmitting(true);
     try {
-      const hash = geofire.geohashForLocation([userLocation.lat, userLocation.lng]);
+      const hash = geofire.geohashForLocation([listingLocation.lat, listingLocation.lng]);
       
       const bookData = {
         title,
@@ -219,7 +268,7 @@ export default function BookListingForm({ onClose, userLocation, existingBook }:
         category,
         condition,
         imageUrl,
-        location: userLocation,
+        location: listingLocation,
         geohash: hash,
       };
 
@@ -614,19 +663,38 @@ export default function BookListingForm({ onClose, userLocation, existingBook }:
                 </div>
               </div>
 
-              <div className="p-6 bg-stone-50 rounded-3xl border border-stone-200 flex items-center gap-4">
-                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-stone-900 shadow-sm border border-stone-100">
-                  <MapPin size={24} />
+              <div className="p-6 bg-stone-50 rounded-3xl border border-stone-200 flex flex-col gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-stone-900 shadow-sm border border-stone-100">
+                    <MapPin size={24} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-stone-900">Listing Location</p>
+                    <p className="text-[10px] text-stone-500 uppercase tracking-[0.15em] mt-0.5">
+                      {listingLocation ? 'Drag pin to adjust' : 'Detecting location...'}
+                    </p>
+                  </div>
+                  {listingLocation && (
+                    <div className="px-3 py-1 bg-green-50 text-green-600 rounded-full text-[9px] font-bold uppercase tracking-widest border border-green-100">
+                      Active
+                    </div>
+                  )}
                 </div>
-                <div className="flex-1">
-                  <p className="text-xs font-bold text-stone-900">Listing Location</p>
-                  <p className="text-[10px] text-stone-500 uppercase tracking-[0.15em] mt-0.5">
-                    {userLocation ? 'Current location detected' : 'Detecting location...'}
-                  </p>
-                </div>
-                {userLocation && (
-                  <div className="px-3 py-1 bg-green-50 text-green-600 rounded-full text-[9px] font-bold uppercase tracking-widest border border-green-100">
-                    Active
+                
+                {listingLocation && (
+                  <div className="h-48 w-full rounded-2xl overflow-hidden border border-stone-200 relative z-0">
+                    <MapContainer 
+                      center={[listingLocation.lat, listingLocation.lng]} 
+                      zoom={14} 
+                      style={{ height: '100%', width: '100%' }}
+                      zoomControl={false}
+                    >
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
+                      <LocationPickerMarker position={listingLocation} setPosition={setListingLocation} />
+                    </MapContainer>
                   </div>
                 )}
               </div>
@@ -647,7 +715,7 @@ export default function BookListingForm({ onClose, userLocation, existingBook }:
 
             <button 
               type="submit"
-              disabled={isSubmitting || !userLocation}
+              disabled={isSubmitting || !listingLocation}
               className="w-full bg-stone-900 text-white py-6 rounded-3xl font-medium hover:bg-stone-800 transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-xl shadow-stone-900/20 hover:scale-[1.02] active:scale-[0.98]"
             >
               {isSubmitting ? (
