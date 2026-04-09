@@ -25,9 +25,9 @@ jobs:
         run: npm install
         
       - name: Build
-        # If you are NOT using a custom domain, the base path must match the repository name.
-        # If you add a custom domain later, change this back to: run: npx vite build --base=/
-        run: npx vite build --base=/AI-Budget-Coach/
+        # We pass the base path here so it works on GitHub Pages 
+        # without breaking your live preview in AI Studio!
+        run: npx vite build --base=/
         
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
