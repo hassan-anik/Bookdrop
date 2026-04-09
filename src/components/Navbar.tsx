@@ -15,13 +15,18 @@ interface NavbarProps {
   onPrivacy: () => void;
   onTerms: () => void;
   onMoreApps: () => void;
+  onMission: () => void;
+  onHome: () => void;
   onProfileClick?: () => void;
 }
 
-export default function Navbar({ user, userProfile, onLogout, onLogin, onAddBook, onSupport, onSettings, onSafety, onPrivacy, onTerms, onMoreApps, onProfileClick }: NavbarProps) {
+export default function Navbar({ user, userProfile, onLogout, onLogin, onAddBook, onSupport, onSettings, onSafety, onPrivacy, onTerms, onMoreApps, onMission, onHome, onProfileClick }: NavbarProps) {
   return (
     <nav className="bg-white border-b border-stone-200 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 z-30">
-      <div className="flex items-center gap-3 sm:gap-4">
+      <div 
+        className="flex items-center gap-3 sm:gap-4 cursor-pointer hover:opacity-80 transition-opacity"
+        onClick={onHome}
+      >
         <div className="w-8 h-8 sm:w-10 sm:h-10 bg-stone-900 rounded-xl sm:rounded-2xl flex items-center justify-center text-white shadow-lg shadow-stone-900/20">
           <BookOpen size={16} className="sm:w-5 sm:h-5" />
         </div>
@@ -51,7 +56,7 @@ export default function Navbar({ user, userProfile, onLogout, onLogin, onAddBook
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
             More Apps
           </button>
-          <a href="#" className="hover:text-stone-900 transition-colors">The Mission</a>
+          <button onClick={onMission} className="hover:text-stone-900 transition-colors">The Mission</button>
           <button onClick={onPrivacy} className="hover:text-stone-900 transition-colors">Privacy</button>
           <button onClick={onTerms} className="hover:text-stone-900 transition-colors">Terms</button>
         </div>

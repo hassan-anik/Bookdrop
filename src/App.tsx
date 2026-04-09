@@ -19,6 +19,7 @@ import SafetyModal from './components/SafetyModal';
 import PrivacyPolicyModal from './components/PrivacyPolicyModal';
 import TermsOfServiceModal from './components/TermsOfServiceModal';
 import PromotedAppsModal from './components/PromotedAppsModal';
+import AboutMission from './components/AboutMission';
 import { useNotifications } from './hooks/useNotifications';
 import { motion, AnimatePresence } from 'motion/react';
 import PaymentGateway from './components/PaymentGateway';
@@ -27,7 +28,7 @@ import { Book, MessageCircle, Plus, Map as MapIcon, ShieldAlert, Info, X, Heart,
 export default function App() {
   const [user, loading, error] = useAuthState(auth);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [activeTab, setActiveTab] = useState<'map' | 'list' | 'chats'>('map');
+  const [activeTab, setActiveTab] = useState<'map' | 'list' | 'chats' | 'about'>('map');
   const [showListingForm, setShowListingForm] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
@@ -164,6 +165,8 @@ export default function App() {
         onPrivacy={() => setShowPrivacyModal(true)}
         onTerms={() => setShowTermsModal(true)}
         onMoreApps={() => setShowMoreApps(true)}
+        onMission={() => setActiveTab('about')}
+        onHome={() => setActiveTab('map')}
         onProfileClick={() => user && setSelectedUserId(user.uid)}
       />
       
@@ -186,6 +189,9 @@ export default function App() {
           </div>
           
           <AnimatePresence mode="wait">
+            {activeTab === 'about' && (
+              <AboutMission key="about" onGoToMap={() => setActiveTab('map')} />
+            )}
             {activeTab === 'chats' && user && (
               <motion.div 
                 key="chats"
