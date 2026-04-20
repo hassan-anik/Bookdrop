@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 
 interface AboutMissionProps {
   onGoToMap: () => void;
+  key?: string;
 }
 
 export default function AboutMission({ onGoToMap }: AboutMissionProps) {
@@ -77,6 +78,29 @@ export default function AboutMission({ onGoToMap }: AboutMissionProps) {
             >
               Explore the Map <ArrowRight size={20} />
             </button>
+          </section>
+
+          {/* FAQ Section for SEO */}
+          <section className="space-y-8 pb-12">
+            <h2 className="text-3xl font-serif italic text-stone-900 text-center mb-12">Frequently Asked Questions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <h3 className="font-bold text-stone-900">Is BookDrop really free?</h3>
+                <p className="text-stone-600">Yes! BookDrop is a community-driven passion project. There are no fees to list, borrow, or swap books. We believe stories should be accessible to everyone.</p>
+              </div>
+              <div className="space-y-3">
+                <h3 className="font-bold text-stone-900">How do I exchange books safely?</h3>
+                <p className="text-stone-600">We recommend meeting in public, well-lit spaces like local cafes, parks, or near public transit. Always use the built-in chat to coordinate your meeting.</p>
+              </div>
+              <div className="space-y-3">
+                <h3 className="font-bold text-stone-900">Do I have to give a book to get one?</h3>
+                <p className="text-stone-600">Not necessarily, but it's encouraged! You can list books as "Lend" if you want them back, or "Giveaway" if you're done with them. Most users love a direct trade!</p>
+              </div>
+              <div className="space-y-3">
+                <h3 className="font-bold text-stone-900">What kinds of books can I list?</h3>
+                <p className="text-stone-600">Anything from fiction and memoirs to textbooks and cookbooks. As long as it's a physical book in readable condition, it's welcome on the map.</p>
+              </div>
+            </div>
           </section>
 
         </div>

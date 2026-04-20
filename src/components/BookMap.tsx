@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, useMap, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import { db, collection, query, where, onSnapshot } from '../firebase';
 import { BookListing, UserProfile } from '../types';
-import { MapPin, Book as BookIcon, X, MessageCircle, Info, ShieldAlert, Star, BookOpen, User, Filter, ChevronRight, ChevronLeft, Trash2, Edit2, Search } from 'lucide-react';
+import { MapPin, Book as BookIcon, X, MessageCircle, Info, ShieldAlert, Star, BookOpen, User, Filter, ChevronRight, ChevronLeft, Trash2, Edit2, Search, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { auth, addDoc, serverTimestamp, getDocs, handleFirestoreError, OperationType, doc, getDoc, deleteDoc } from '../firebase';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -364,6 +364,25 @@ export default function BookMap({ userLocation, onChatRequest, onLogin, onUserCl
               className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur rounded-full text-stone-900 shadow-md z-10 hover:bg-white transition-colors"
             >
               <X size={18} />
+            </button>
+
+            <button 
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: `Check out "${selectedBook.title}" on BookDrop`,
+                    text: `I found "${selectedBook.title}" by ${selectedBook.author} on BookDrop. Join the neighborhood book exchange!`,
+                    url: window.location.href,
+                  }).catch(console.error);
+                } else {
+                  navigator.clipboard.writeText(window.location.href);
+                  alert("Link copied to clipboard!");
+                }
+              }}
+              className="absolute top-3 right-14 p-2 bg-white/90 backdrop-blur rounded-full text-stone-900 shadow-md z-10 hover:bg-white transition-colors"
+              title="Share Book"
+            >
+              <Share2 size={18} />
             </button>
 
             <div className="h-40 sm:h-48 bg-stone-200 relative">

@@ -28,26 +28,50 @@
 
     <!-- Structured Data (JSON-LD) for AI Search & Google -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "BookDrop",
-      "url": "https://bookndrop.org/",
-      "description": "A local neighborhood book sharing application. Discover, borrow, and share books with people in your community.",
-      "applicationCategory": "LifestyleApplication",
-      "genre": "Books & Reference",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "BookDrop",
+        "url": "https://bookndrop.org/",
+        "description": "A local neighborhood book sharing application. Discover, borrow, and share books with people in your community.",
+        "applicationCategory": "LifestyleApplication",
+        "genre": "Books & Reference",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": [
+          "Local book discovery",
+          "Free book sharing",
+          "Neighborhood library map",
+          "Direct messaging for book exchange"
+        ]
       },
-      "featureList": [
-        "Local book discovery",
-        "Free book sharing",
-        "Neighborhood library map",
-        "Direct messaging for book exchange"
-      ]
-    }
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Is BookDrop really free?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes! BookDrop is a community-driven passion project. There are no fees to list, borrow, or swap books."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do I exchange books safely?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "We recommend meeting in public, well-lit spaces like local cafes or parks and using our built-in chat to coordinate."
+            }
+          }
+        ]
+      }
+    ]
     </script>
 
     <script>
