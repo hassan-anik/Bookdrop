@@ -227,31 +227,37 @@ export default function App() {
         </div>
 
         {/* Mobile Navigation */}
-        <div className="bg-white border-t border-stone-200 p-2 flex justify-around items-center md:hidden">
-          <button 
-            onClick={() => setActiveTab('map')}
-            className={`p-3 rounded-2xl transition-colors ${activeTab === 'map' ? 'bg-stone-900 text-white' : 'text-stone-400'}`}
-          >
-            <MapIcon size={24} />
-          </button>
-          <button 
-            onClick={handleListABook}
-            className="p-3 bg-stone-900 text-white rounded-full shadow-lg -mt-8 border-4 border-stone-50"
-          >
-            <Plus size={24} />
-          </button>
-          <button 
-            onClick={() => {
-              if (!user) {
-                handleLogin();
-              } else {
-                setActiveTab('chats');
-              }
-            }}
-            className={`p-3 rounded-2xl transition-colors ${activeTab === 'chats' ? 'bg-stone-900 text-white' : 'text-stone-400'}`}
-          >
-            <MessageCircle size={24} />
-          </button>
+        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-48px)] max-w-sm z-[4000]">
+          <div className="bg-stone-900/90 backdrop-blur-xl p-2 rounded-[32px] shadow-2xl flex justify-between items-center border border-white/10">
+            <button 
+              onClick={() => setActiveTab('map')}
+              className={`flex-1 flex flex-col items-center gap-1 p-2 transition-all ${activeTab === 'map' ? 'text-white' : 'text-stone-500'}`}
+            >
+              <MapIcon size={20} />
+              <span className="text-[9px] font-bold uppercase tracking-widest">Library</span>
+            </button>
+
+            <button 
+              onClick={handleListABook}
+              className="w-14 h-14 bg-white text-stone-950 rounded-[22px] shadow-xl flex items-center justify-center transition-transform active:scale-95"
+            >
+              <Plus size={24} />
+            </button>
+
+            <button 
+              onClick={() => {
+                if (!user) {
+                  handleLogin();
+                } else {
+                  setActiveTab('chats');
+                }
+              }}
+              className={`flex-1 flex flex-col items-center gap-1 p-2 transition-all ${activeTab === 'chats' ? 'text-white' : 'text-stone-500'}`}
+            >
+              <MessageCircle size={20} />
+              <span className="text-[9px] font-bold uppercase tracking-widest">Chats</span>
+            </button>
+          </div>
         </div>
 
         {/* Desktop Floating Action Button */}

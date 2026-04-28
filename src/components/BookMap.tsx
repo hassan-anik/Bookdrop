@@ -18,31 +18,31 @@ interface BookMapProps {
   onEditBook?: (book: BookListing) => void;
 }
 
-// Custom Marker Icon using Lucide
+// Custom Marker Icon with a softer, more branded look
 const customIcon = L.divIcon({
   html: renderToStaticMarkup(
-    <div className="relative -translate-x-1/2 -translate-y-full">
-      <div className="bg-stone-900 text-white p-2 rounded-full shadow-lg border-2 border-white">
-        <BookIcon size={16} />
+    <div className="relative -translate-x-1/2 -translate-y-full hover:scale-110 transition-transform duration-200">
+      <div className="bg-stone-900 text-white p-2.5 rounded-2xl shadow-xl border-2 border-white group">
+        <BookIcon size={18} />
       </div>
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-stone-900"></div>
+      <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rotate-45 border-r border-b border-stone-200"></div>
     </div>
   ),
   className: 'custom-marker-icon',
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
 });
 
 const userLocationIcon = L.divIcon({
   html: renderToStaticMarkup(
     <div className="relative -translate-x-1/2 -translate-y-1/2">
-      <div className="w-6 h-6 bg-blue-500 rounded-full border-4 border-white shadow-lg animate-pulse"></div>
-      <div className="absolute inset-0 w-6 h-6 bg-blue-500 rounded-full animate-ping opacity-20"></div>
+      <div className="w-5 h-5 bg-indigo-500 rounded-full border-4 border-white shadow-lg relative z-10"></div>
+      <div className="absolute inset-0 w-5 h-5 bg-indigo-500 rounded-full animate-ping opacity-25"></div>
     </div>
   ),
   className: 'user-location-icon',
-  iconSize: [24, 24],
-  iconAnchor: [12, 12],
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
 });
 
 // Component to handle map center updates and expose a way to recenter
@@ -275,40 +275,42 @@ export default function BookMap({ userLocation, onChatRequest, onLogin, onUserCl
       </AnimatePresence>
 
       {/* Category Filter Bar */}
-      <div className="absolute top-16 left-0 right-0 z-[1000] px-4 md:px-8 pointer-events-none">
-        <div className="max-w-7xl mx-auto flex flex-col gap-3">
-          {/* Search Bar */}
-          <div className="bg-white/90 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-stone-200 pointer-events-auto flex items-center gap-2 max-w-md">
-            <Search size={18} className="text-stone-400 ml-2" />
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[1000] w-full max-w-2xl px-4 pointer-events-none">
+        <div className="flex flex-col gap-4">
+          {/* Search Bar - Redesigned as a unified pill */}
+          <div className="bg-white/95 backdrop-blur-xl p-1.5 rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-stone-200 pointer-events-auto flex items-center gap-2">
+            <div className="w-10 h-10 flex items-center justify-center text-stone-400">
+              <Search size={20} />
+            </div>
             <input 
               type="text"
-              placeholder="Search by title or author..."
+              placeholder="Title, author, or genre..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 bg-transparent border-none focus:ring-0 text-sm text-stone-900 placeholder:text-stone-400 py-1 outline-none"
+              className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium text-stone-900 placeholder:text-stone-400 py-2 outline-none"
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="p-1 text-stone-400 hover:text-stone-900">
-                <X size={16} />
+              <button onClick={() => setSearchQuery('')} className="p-2 text-stone-400 hover:text-stone-900">
+                <X size={18} />
               </button>
             )}
+            <div className="h-8 w-[1px] bg-stone-100 mx-1"></div>
+            <div className="pr-4 pl-2 flex items-center gap-2 text-stone-900 font-bold text-[10px] uppercase tracking-widest bg-stone-50 rounded-full py-2 border border-stone-100">
+              <Filter size={14} />
+              Filter
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="bg-white/90 backdrop-blur-md p-2 rounded-2xl shadow-lg border border-stone-200 pointer-events-auto shrink-0">
-              <Filter size={18} className="text-stone-900" />
-            </div>
-            
-            <div className="flex-1 overflow-x-auto no-scrollbar pointer-events-auto">
-              <div className="flex gap-2 py-1">
+          <div className="flex-1 overflow-x-auto no-scrollbar pointer-events-auto mask-horizontal-fade">
+            <div className="flex gap-2.5 py-1 justify-center">
               {CATEGORIES.map(cat => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`px-5 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all border ${
+                  className={`px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap transition-all border ${
                     selectedCategory === cat
-                    ? 'bg-stone-900 text-white border-stone-900 shadow-lg shadow-stone-900/20'
-                    : 'bg-white/90 backdrop-blur-md text-stone-500 border-stone-200 hover:border-stone-400'
+                    ? 'bg-stone-900 text-white border-stone-900 shadow-xl shadow-stone-900/10 scale-105'
+                    : 'bg-white/90 backdrop-blur-md text-stone-500 border-stone-100 hover:border-stone-400 hover:bg-white'
                   }`}
                 >
                   {cat}
@@ -318,35 +320,34 @@ export default function BookMap({ userLocation, onChatRequest, onLogin, onUserCl
           </div>
         </div>
       </div>
-      </div>
 
-      <div className="absolute top-4 left-4 z-[1000] flex flex-col gap-2">
+      <div className="absolute top-6 left-6 z-[1000] flex flex-col gap-2">
         {!userLocation ? (
-          <div className="bg-white px-4 py-2 rounded-full shadow-lg border border-stone-200 text-xs font-medium text-stone-600 flex items-center gap-2">
-            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-            Detecting your location...
+          <div className="bg-white/90 backdrop-blur px-5 py-3 rounded-full shadow-xl border border-stone-100 text-[10px] font-bold text-stone-500 uppercase tracking-widest flex items-center gap-3">
+            <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.5)]"></div>
+            Locating...
           </div>
         ) : (
-          <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border border-stone-200 text-[10px] font-bold text-stone-900 uppercase tracking-widest flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            Searching within 5km
+          <div className="bg-white/90 backdrop-blur px-5 py-3 rounded-full shadow-xl border border-stone-100 text-[10px] font-bold text-stone-900 uppercase tracking-widest flex items-center gap-3">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+            Online • 5km radius
           </div>
         )}
       </div>
 
-      <div className="absolute top-4 right-4 z-[1000] flex flex-col items-end gap-2">
-        <div className="bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-stone-200 shadow-sm text-[10px] font-bold text-stone-400 uppercase tracking-widest flex items-center gap-2">
+      <div className="absolute bottom-32 right-6 z-[1000] flex flex-col items-end gap-3 md:bottom-auto md:top-6 md:right-6">
+        <div className="hidden md:flex bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-stone-100 shadow-sm text-[9px] font-bold text-stone-400 uppercase tracking-widest items-center gap-2">
           <Info size={12} />
-          OpenStreetMap - Free & Open
+          Community Powered Map
         </div>
         
         {userLocation && (
           <button 
             onClick={handleRecenter}
-            className="bg-white p-3 rounded-2xl shadow-lg border border-stone-200 text-stone-900 hover:bg-stone-50 transition-all pointer-events-auto"
+            className="bg-white p-4 rounded-[20px] shadow-2xl border border-stone-100 text-stone-900 hover:scale-105 active:scale-95 transition-all pointer-events-auto"
             title="Recenter Map"
           >
-            <MapPin size={20} />
+            <MapPin size={24} />
           </button>
         )}
       </div>
@@ -357,7 +358,7 @@ export default function BookMap({ userLocation, onChatRequest, onLogin, onUserCl
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
-            className="absolute bottom-20 left-4 right-4 md:left-8 md:bottom-24 md:w-96 bg-white rounded-[32px] shadow-2xl border border-stone-200 overflow-hidden z-[2000]"
+            className="absolute bottom-20 left-4 right-4 md:left-8 md:bottom-24 md:w-96 bg-white rounded-[40px] shadow-2xl border border-stone-200 overflow-hidden z-[2000]"
           >
             <button 
               onClick={() => setSelectedBook(null)}
@@ -385,45 +386,58 @@ export default function BookMap({ userLocation, onChatRequest, onLogin, onUserCl
               <Share2 size={18} />
             </button>
 
-            <div className="h-40 sm:h-48 bg-stone-200 relative">
+            <div className="h-48 sm:h-56 bg-stone-100 relative group/image">
               {selectedBook.imageUrl ? (
                 <img 
                   src={selectedBook.imageUrl} 
-                  className="w-full h-full object-cover" 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover/image:scale-110" 
                   alt={selectedBook.title}
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-stone-400">
-                  <BookIcon size={48} />
+                <div className="w-full h-full flex items-center justify-center text-stone-300">
+                  <BookIcon size={56} strokeWidth={1} />
                 </div>
               )}
-              <div className="absolute top-4 left-4 bg-stone-900 text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
-                FREE
+              <div className="absolute top-4 left-4 bg-stone-900/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-lg">
+                Available
               </div>
             </div>
 
-            <div className="p-6 space-y-4">
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-serif italic text-stone-900">{selectedBook.title}</h3>
-                  <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider bg-stone-100 px-2 py-1 rounded">
+            <div className="p-8 space-y-6">
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="space-y-2"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-2xl font-serif italic text-stone-900 leading-tight">{selectedBook.title}</h3>
+                    <p className="text-stone-500 font-medium">{selectedBook.author}</p>
+                  </div>
+                  <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider bg-stone-100 px-2.5 py-1.5 rounded-xl whitespace-nowrap">
                     {selectedBook.condition}
                   </span>
                 </div>
-                <p className="text-stone-500 text-sm line-clamp-2">{selectedBook.description}</p>
-              </div>
+                <p className="text-stone-600 text-sm leading-relaxed line-clamp-3 italic">"{selectedBook.description}"</p>
+              </motion.div>
 
-              <div className="flex items-center gap-4 text-xs text-stone-400 font-medium">
-                <div className="flex items-center gap-1">
-                  <MapPin size={14} />
-                  {userLocation ? `${calculateDistance(userLocation.lat, userLocation.lng, selectedBook.location.lat, selectedBook.location.lng).toFixed(1)} km away` : 'Nearby'}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex items-center gap-6 text-[11px] text-stone-400 font-bold uppercase tracking-widest border-t border-stone-100 pt-6"
+              >
+                <div className="flex items-center gap-2">
+                  <MapPin size={14} className="text-indigo-400" />
+                  {userLocation ? `${calculateDistance(userLocation.lat, userLocation.lng, selectedBook.location.lat, selectedBook.location.lng).toFixed(1)} km` : 'Nearby'}
                 </div>
-                <div className="flex items-center gap-1">
-                  <Info size={14} />
+                <div className="flex items-center gap-2">
+                  <Info size={14} className="text-amber-400" />
                   {selectedBook.category}
                 </div>
-              </div>
+              </motion.div>
 
               <div className="py-4 border-y border-stone-100">
                 <div 
