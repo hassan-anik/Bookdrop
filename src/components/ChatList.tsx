@@ -96,10 +96,15 @@ export default function ChatList({ onSelectChat, selectedChatId, onSupport }: Ch
             <button
               key={chat.id}
               onClick={() => onSelectChat(chat.id)}
-              className={`w-full p-4 flex items-start gap-4 transition-colors border-b border-stone-50 ${selectedChatId === chat.id ? 'bg-stone-100' : 'hover:bg-stone-50'}`}
+              className={`w-full p-4 flex items-start gap-4 transition-colors border-b border-stone-50 relative ${selectedChatId === chat.id ? 'bg-stone-100' : 'hover:bg-stone-50'}`}
             >
-              <div className="w-12 h-12 bg-stone-200 rounded-2xl flex-shrink-0 flex items-center justify-center text-stone-500">
+              <div className="w-12 h-12 bg-stone-200 rounded-2xl flex-shrink-0 flex items-center justify-center text-stone-500 relative">
                 <BookOpen size={20} />
+                {auth.currentUser && chat.unreadCount?.[auth.currentUser.uid] > 0 && selectedChatId !== chat.id && (
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow border-2 border-white">
+                    {chat.unreadCount[auth.currentUser.uid]}
+                  </div>
+                )}
               </div>
               <div className="flex-1 text-left min-w-0">
                 <div className="flex items-center justify-between gap-2">

@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { auth, db, googleProvider, signInWithPopup, signOut, onSnapshot, doc, setDoc, getDoc } from './firebase';
+import { auth, db, googleProvider, signInWithPopup, signOut, onSnapshot, doc, setDoc, getDoc, collection, query, where } from './firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { UserProfile } from './types';
 import Navbar from './components/Navbar';
@@ -46,8 +46,34 @@ export default function App() {
   const [loginError, setLoginError] = useState<string | null>(null);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [editingBook, setEditingBook] = useState<any | null>(null);
+  const [totalUnread, setTotalUnread] = useState(0);
 
   useNotifications(userProfile);
+
+  useEffect(() => {
+    if (!user) {
+      setTotalUnread(0);
+      return;
+    }
+
+    const q = query(
+      collection(db, 'chats'),
+      where('participants', 'array-contains', user.uid)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      let count = 0;
+      snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.unreadCount && data.unreadCount[user.uid] > 0) {
+          count += data.unreadCount[user.uid];
+        }
+      });
+      setTotalUnread(count);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   useEffect(() => {
     // If user is logged in, skip landing
@@ -252,9 +278,16 @@ export default function App() {
                   setActiveTab('chats');
                 }
               }}
-              className={`flex-1 flex flex-col items-center gap-1 p-2 transition-all ${activeTab === 'chats' ? 'text-white' : 'text-stone-500'}`}
+              className={`flex-1 flex flex-col items-center gap-1 p-2 transition-all relative ${activeTab === 'chats' ? 'text-white' : 'text-stone-500'}`}
             >
-              <MessageCircle size={20} />
+              <div className="relative">
+                <MessageCircle size={20} />
+                {totalUnread > 0 && (
+                  <div className="absolute -top-1 -right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold flex items-center justify-center rounded-full border border-stone-900 shadow">
+                    {totalUnread}
+                  </div>
+                )}
+              </div>
               <span className="text-[9px] font-bold uppercase tracking-widest">Chats</span>
             </button>
           </div>
@@ -285,9 +318,14 @@ export default function App() {
                 setActiveTab('chats');
               }
             }}
-            className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${activeTab === 'chats' ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}
+            className={`px-6 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === 'chats' ? 'bg-stone-900 text-white' : 'text-stone-600 hover:bg-stone-100'}`}
           >
             Messages
+            {totalUnread > 0 && (
+              <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+                {totalUnread}
+              </span>
+            )}
           </button>
         </div>
       </main>

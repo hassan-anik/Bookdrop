@@ -55,6 +55,7 @@ export interface ChatSession {
   participants: string[];
   lastMessage?: string;
   updatedAt: any;
+  unreadCount?: Record<string, number>;
 }
 
 export interface ChatMessage {

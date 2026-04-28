@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { db, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, auth, doc, updateDoc, getDoc, handleFirestoreError, OperationType, runTransaction } from '../firebase';
+import { db, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, auth, doc, updateDoc, getDoc, handleFirestoreError, OperationType, runTransaction, increment } from '../firebase';
 import { ChatMessage, BookStatus } from '../types';
 import { Send, ChevronLeft, ShieldAlert, AlertTriangle, CheckCircle2, Book as BookIcon } from 'lucide-react';
 import { format } from 'date-fns';
@@ -32,6 +32,13 @@ export default function ChatWindow({ chatId, onBack, onReviewUser, onUserClick }
         const data = snapshot.data();
         setChatInfo(data);
         
+        // Clear unread count for current user if > 0
+        if (auth.currentUser && data.unreadCount?.[auth.currentUser.uid] > 0) {
+          updateDoc(chatRef, {
+            [`unreadCount.${auth.currentUser.uid}`]: 0
+          }).catch(console.error);
+        }
+
         // Listen to book info
         if (!unsubscribeBook) {
           unsubscribeBook = onSnapshot(doc(db, 'books', data.bookId), (bookSnap) => {
@@ -87,10 +94,18 @@ export default function ChatWindow({ chatId, onBack, onReviewUser, onUserClick }
         flagged: isFlagged
       });
 
-      await updateDoc(doc(db, 'chats', chatId), {
+      const otherUserId = chatInfo?.participants?.find((id: string) => id !== auth.currentUser?.uid);
+
+      const updateData: any = {
         lastMessage: text,
         updatedAt: serverTimestamp()
-      });
+      };
+      
+      if (otherUserId) {
+        updateData[`unreadCount.${otherUserId}`] = increment(1);
+      }
+
+      await updateDoc(doc(db, 'chats', chatId), updateData);
 
       setNewMessage('');
     } catch (error) {
